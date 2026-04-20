@@ -272,9 +272,13 @@ export default function App() {
       
       const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
       try {
-        // headers ഉം mode ഉം ഒഴിവാക്കി ഡാറ്റ അയക്കുന്നു (Bypasses CORS restrictions)
+        // By strictly using mode: 'no-cors' and text/plain we bypass CORS rules smoothly
         await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
           method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
           body: JSON.stringify({
             data: {
               ...dataToSave,
