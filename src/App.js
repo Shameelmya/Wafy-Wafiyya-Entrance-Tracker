@@ -275,12 +275,12 @@ export default function App() {
         const response = await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            data: { 
-              ...dataToSave, 
-              institutionId: activeCollege.id, 
-              institutionName: activeCollege.name 
-            } 
+          body: JSON.stringify({
+            data: {
+              ...dataToSave,
+              institutionId: activeCollege.id,
+              institutionName: activeCollege.name
+            }
           })
         });
 
