@@ -272,25 +272,18 @@ export default function App() {
       
       const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
       try {
-         await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8'
-    },
-    body: JSON.stringify({
-      data: {
-        ...dataToSave,
-        institutionId: activeCollege.id,
-        institutionName: activeCollege.name
-      }
-    })
-  });
-
-  console.log("Sent to Google Sheets");
-} catch (sheetError) {
-  console.error("Google Sheets error:", sheetError);
-}
+        // headers ഉം mode ഉം ഒഴിവാക്കി ഡാറ്റ അയക്കുന്നു (Bypasses CORS restrictions)
+        await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            data: {
+              ...dataToSave,
+              institutionId: activeCollege.id,
+              institutionName: activeCollege.name
+            }
+          })
+        });
+        console.log("Request sent to Google Sheets successfully.");
       } catch (sheetError) { 
         console.error("Google Sheets fetch error:", sheetError); 
       }
@@ -300,6 +293,7 @@ export default function App() {
       fetchAllSubmissions(); 
       setTimeout(() => { setAutoSaveStatus(''); }, 3000);
     } catch (error) {
+      console.error("Auto-save error:", error);
       setAutoSaveStatus('Save Failed!');
     }
   };
