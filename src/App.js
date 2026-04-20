@@ -272,23 +272,25 @@ export default function App() {
       
       const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
       try {
-        const response = await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data: {
-              ...dataToSave,
-              institutionId: activeCollege.id,
-              institutionName: activeCollege.name
-            }
-          })
-        });
+         await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      data: {
+        ...dataToSave,
+        institutionId: activeCollege.id,
+        institutionName: activeCollege.name
+      }
+    })
+  });
 
-        if (response.ok) {
-          console.log("Successfully saved to Google Sheets");
-        } else {
-          console.error("Failed to save to Google Sheets:", response.statusText);
-        }
+  console.log("Sent to Google Sheets");
+} catch (sheetError) {
+  console.error("Google Sheets error:", sheetError);
+}
       } catch (sheetError) { 
         console.error("Google Sheets fetch error:", sheetError); 
       }
