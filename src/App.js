@@ -115,8 +115,6 @@ const calculateScore = (data) => {
 
 // --- Firebase Setup ---
 const canvasFirebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-
-// 👇👇👇 VERCEL-ൽ പ്രവർത്തിക്കാൻ ഇവിടെ നിങ്ങളുടെ യഥാർത്ഥ FIREBASE CONFIG നൽകണം 👇👇👇
 const fallbackFirebaseConfig = {
   apiKey: "AIzaSyAJyJJIeYhum5TEYzcWW0Ey6qIOGrwXxl8",
   authDomain: "entrance-tracker-6f5fc.firebaseapp.com",
@@ -125,7 +123,6 @@ const fallbackFirebaseConfig = {
   messagingSenderId: "1046024859613",
   appId: "1:1046024859613:web:0c66247bc4e3d702ab1034"
 };
-// 👆👆👆 ----------------------------------------------------------- 👆👆👆
 
 const firebaseConfig = canvasFirebaseConfig || fallbackFirebaseConfig;
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -133,7 +130,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : "wafy-entrance-tracker";
 
-// --- Empty Form State (All sliders default to 0) ---
+// --- Empty Form State ---
 const initialFormState = {
   q1_committee_formed: '', q2_chairman: '', q2_convener: '', q2_member1: '', q2_member2: '', q2_member3: '',
   q4_help_desk_formed: '', q4_contact_numbers: [''],
@@ -167,6 +164,17 @@ export default function App() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [clearVerifyText, setClearVerifyText] = useState('');
   const [isClearing, setIsClearing] = useState(false);
+
+  // Force Viewport Meta Tag for Mobile Fit (Solves Desktop view on mobile)
+  useEffect(() => {
+    let viewport = document.querySelector("meta[name=viewport]");
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.name = "viewport";
+      document.head.appendChild(viewport);
+    }
+    viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0");
+  }, []);
 
   // Initialize Auth & Settings Listener
   useEffect(() => {
@@ -280,7 +288,6 @@ export default function App() {
     loadInstitutionData();
   }, [user, activeCollege, view]);
 
-  // REMOVED AUTO-SAVE `useEffect` HERE
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -352,7 +359,6 @@ export default function App() {
             }
           })
         });
-        console.log("Request sent to Google Sheets successfully.");
       } catch (sheetError) { 
         console.error("Google Sheets fetch error:", sheetError); 
       }
@@ -387,7 +393,6 @@ export default function App() {
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ action: 'DELETE_ALL' })
         });
-        console.log("Sent clear command to Google Sheets");
       } catch (sheetError) {
         console.error("Error sending clear command to sheets:", sheetError);
       }
@@ -432,35 +437,35 @@ export default function App() {
 
   if (view === 'login') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-blue-100 flex items-center justify-center p-4" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-blue-100 flex items-center justify-center p-4 sm:p-6" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
         <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
-          <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-8 text-center relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-6 sm:p-8 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-               <Building2 className="w-32 h-32" />
+               <Building2 className="w-24 h-24 sm:w-32 sm:h-32" />
             </div>
-            <Award className="w-16 h-16 text-white mx-auto mb-4 relative z-10" />
-            <h1 className="text-3xl font-extrabold text-white mb-1 relative z-10">Wafy Wafiyya Entrance</h1>
-            <p className="text-blue-100 font-medium text-lg relative z-10">Admission Drive - Tracker & Analytics</p>
+            <Award className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-3 sm:mb-4 relative z-10" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 relative z-10">Wafy Wafiyya Entrance</h1>
+            <p className="text-blue-100 font-medium text-sm sm:text-lg relative z-10">Admission Drive - Tracker & Analytics</p>
           </div>
           
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             {/* Login Tabs */}
-            <div className="flex rounded-xl bg-slate-100 p-1 mb-8">
+            <div className="flex flex-col sm:flex-row rounded-xl bg-slate-100 p-1 mb-6 sm:mb-8 gap-1 sm:gap-0">
               <button 
                 onClick={() => { setLoginTab('college'); setLoginError(''); setPasskeyInput(''); }}
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${loginTab === 'college' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'college' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 College Login
               </button>
               <button 
                 onClick={() => { setLoginTab('admin'); setLoginError(''); setPasskeyInput(''); }}
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${loginTab === 'admin' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'admin' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Admin Login
               </button>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-5 sm:space-y-6">
               {loginError && (
                 <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0" /> {loginError}
@@ -470,19 +475,19 @@ export default function App() {
               {loginTab === 'college' ? (
                 <>
                   <div className="relative z-50">
-                    <label className="block text-base font-bold text-slate-700 mb-2">സ്ഥാപനം (Select Institution)</label>
+                    <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">സ്ഥാപനം (Select Institution)</label>
                     <SearchableSelect 
                       options={COLLEGES} value={selectedIdInput} onChange={setSelectedIdInput}
                       placeholder="-- നിങ്ങളുടെ സ്ഥാപനം തിരയുക --"
                     />
                   </div>
                   <div>
-                    <label className="block text-base font-bold text-slate-700 mb-2">പാസ്കീ (Passkey)</label>
+                    <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">പാസ്കീ (Passkey)</label>
                     <div className="relative">
                       <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <input
                         type="text" required maxLength={5}
-                        className="w-full pl-12 pr-5 py-4 text-lg font-bold tracking-widest uppercase rounded-xl border-2 border-slate-200 focus:border-blue-500 outline-none text-slate-800"
+                        className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold tracking-widest uppercase rounded-xl border-2 border-slate-200 focus:border-blue-500 outline-none text-slate-800"
                         placeholder="5-Digit Key" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value.toUpperCase())}
                       />
                     </div>
@@ -490,20 +495,20 @@ export default function App() {
                 </>
               ) : (
                 <div>
-                  <label className="block text-base font-bold text-slate-700 mb-2">അഡ്മിൻ പാസ്‌വേർഡ് (Admin Password)</label>
+                  <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">അഡ്മിൻ പാസ്‌വേർഡ് (Admin Password)</label>
                   <div className="relative">
                     <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
                       type="password" required
-                      className="w-full pl-12 pr-5 py-4 text-lg font-bold rounded-xl border-2 border-slate-200 focus:border-teal-500 outline-none text-slate-800"
+                      className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-200 focus:border-teal-500 outline-none text-slate-800"
                       placeholder="Enter Admin Password" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value)}
                     />
                   </div>
                 </div>
               )}
 
-              <button type="submit" className={`w-full text-white text-lg font-bold py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-3 hover:-translate-y-0.5 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
-                <LogIn className="w-6 h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
+              <button type="submit" className={`w-full text-white text-base sm:text-lg font-bold py-3.5 sm:py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-2 sm:gap-3 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
+                <LogIn className="w-5 h-5 sm:w-6 sm:h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
               </button>
             </form>
           </div>
@@ -547,7 +552,7 @@ export default function App() {
     ).filter(s => s.text && s.text.trim() !== '');
 
     return (
-      <div className="min-h-screen bg-slate-50 pb-24" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
+      <div className="min-h-screen bg-slate-50 pb-24 overflow-x-auto" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
         {/* CSS for Printing PDF - Highly Professional Minimal Design */}
         <style>{`
           @media print {
@@ -589,266 +594,269 @@ export default function App() {
           }
         `}</style>
 
-        <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md no-print">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="w-7 h-7 text-teal-400" />
-              <h1 className="font-bold text-xl">Admin Dashboard & Analytics</h1>
+        {/* ADMIN DASHBOARD ALWAYS IN COMPUTER MODE MIN-WIDTH 1200px */}
+        <div className="min-w-[1200px]">
+          <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md no-print">
+            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-7 h-7 text-teal-400" />
+                <h1 className="font-bold text-xl">Admin Dashboard & Analytics</h1>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* TOGGLE RANKS BUTTON */}
+                <button 
+                  onClick={toggleShowRanks} 
+                  title="Toggle Ranks visibility for Colleges"
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors ${showRanks ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/50' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600'}`}
+                >
+                  {showRanks ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  {showRanks ? 'Ranks Visible' : 'Ranks Hidden'}
+                </button>
+
+                <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
+                  <Printer className="w-4 h-4" /> Print Report
+                </button>
+                <button onClick={() => setShowClearModal(true)} className="bg-red-600/20 hover:bg-red-600/40 text-red-200 hover:text-white border border-red-500/50 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
+                  <Trash2 className="w-4 h-4" /> Clear Data
+                </button>
+                <button onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {/* TOGGLE RANKS BUTTON */}
-              <button 
-                onClick={toggleShowRanks} 
-                title="Toggle Ranks visibility for Colleges"
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors ${showRanks ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/50' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600'}`}
-              >
-                {showRanks ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                {showRanks ? 'Ranks Visible' : 'Ranks Hidden'}
-              </button>
+          </header>
 
-              <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
-                <Printer className="w-4 h-4" /> Print Report
-              </button>
-              <button onClick={() => setShowClearModal(true)} className="bg-red-600/20 hover:bg-red-600/40 text-red-200 hover:text-white border border-red-500/50 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
-                <Trash2 className="w-4 h-4" /> Clear Data
-              </button>
-              <button onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
+          {/* Clear Data Verification Modal */}
+          {showClearModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
+               <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+                   <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-red-600 flex items-center gap-2"><AlertOctagon className="w-6 h-6" /> ഡാറ്റ ഡിലീറ്റ് ചെയ്യുക!</h3>
+                      <button onClick={() => { setShowClearModal(false); setClearVerifyText(''); }} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-6 h-6 text-slate-500" /></button>
+                   </div>
+                   <div className="bg-red-50 p-4 rounded-xl border border-red-100 mb-5">
+                      <p className="text-red-800 text-sm font-semibold leading-relaxed">
+                        മുന്നറിയിപ്പ്: ഇത് ഫയർബേസിലുള്ള എല്ലാ കോളേജുകളുടെയും ഡാറ്റ പൂർണ്ണമായും മായ്ച്ചു കളയും. ടെസ്റ്റിംഗ് കഴിഞ്ഞ ശേഷം സിസ്റ്റം ഫ്രഷ് ആക്കാൻ മാത്രം ഇത് ഉപയോഗിക്കുക.
+                      </p>
+                   </div>
+                   <p className="text-slate-800 font-bold mb-2 text-sm">തുടരാൻ താഴെ <span className="text-red-600 select-none bg-red-100 px-1.5 py-0.5 rounded">DeLeTe</span> എന്ന് കൃത്യമായി ടൈപ്പ് ചെയ്യുക:</p>
+                   <input 
+                      type="text" 
+                      value={clearVerifyText} 
+                      onChange={e => setClearVerifyText(e.target.value)} 
+                      placeholder="Type DeLeTe here"
+                      className="w-full border-2 border-slate-200 focus:border-red-500 p-3 rounded-lg mb-5 outline-none font-bold text-slate-800" 
+                   />
+                   <button 
+                      disabled={clearVerifyText !== 'DeLeTe' || isClearing} 
+                      onClick={handleClearAllData} 
+                      className="w-full bg-red-600 text-white p-3.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                   >
+                      {isClearing ? <><Loader2 className="w-5 h-5 animate-spin" /> Clearing Data...</> : <><Trash2 className="w-5 h-5" /> Permanently Delete All Data</>}
+                   </button>
+               </div>
             </div>
-          </div>
-        </header>
-
-        {/* Clear Data Verification Modal */}
-        {showClearModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
-             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-red-600 flex items-center gap-2"><AlertOctagon className="w-6 h-6" /> ഡാറ്റ ഡിലീറ്റ് ചെയ്യുക!</h3>
-                    <button onClick={() => { setShowClearModal(false); setClearVerifyText(''); }} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-6 h-6 text-slate-500" /></button>
-                 </div>
-                 <div className="bg-red-50 p-4 rounded-xl border border-red-100 mb-5">
-                    <p className="text-red-800 text-sm font-semibold leading-relaxed">
-                      മുന്നറിയിപ്പ്: ഇത് ഫയർബേസിലുള്ള എല്ലാ കോളേജുകളുടെയും ഡാറ്റ പൂർണ്ണമായും മായ്ച്ചു കളയും. ടെസ്റ്റിംഗ് കഴിഞ്ഞ ശേഷം സിസ്റ്റം ഫ്രഷ് ആക്കാൻ മാത്രം ഇത് ഉപയോഗിക്കുക.
-                    </p>
-                 </div>
-                 <p className="text-slate-800 font-bold mb-2 text-sm">തുടരാൻ താഴെ <span className="text-red-600 select-none bg-red-100 px-1.5 py-0.5 rounded">DeLeTe</span> എന്ന് കൃത്യമായി ടൈപ്പ് ചെയ്യുക:</p>
-                 <input 
-                    type="text" 
-                    value={clearVerifyText} 
-                    onChange={e => setClearVerifyText(e.target.value)} 
-                    placeholder="Type DeLeTe here"
-                    className="w-full border-2 border-slate-200 focus:border-red-500 p-3 rounded-lg mb-5 outline-none font-bold text-slate-800" 
-                 />
-                 <button 
-                    disabled={clearVerifyText !== 'DeLeTe' || isClearing} 
-                    onClick={handleClearAllData} 
-                    className="w-full bg-red-600 text-white p-3.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                 >
-                    {isClearing ? <><Loader2 className="w-5 h-5 animate-spin" /> Clearing Data...</> : <><Trash2 className="w-5 h-5" /> Permanently Delete All Data</>}
-                 </button>
-             </div>
-          </div>
-        )}
-
-        <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-          {/* Professional Print Header */}
-          <div className="hidden print-only mb-10 border-b-2 border-slate-800 pb-6">
-             <div className="flex justify-between items-end">
-               <div>
-                 <h1 className="text-3xl font-serif font-extrabold text-slate-900 mb-2">Admission Analytics Report</h1>
-                 <p className="text-slate-600 font-bold text-sm uppercase tracking-widest">Wafy Wafiyya - Executive Summary</p>
-               </div>
-               <div className="text-right">
-                 <p className="text-slate-800 font-bold text-sm">Report Taken: {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
-                 <p className="text-slate-600 font-medium text-sm mt-1">Institutions Evaluated: {submittedCount} / {totalColleges}</p>
-                 <p className="text-slate-400 text-xs mt-1 italic">Confidential Document</p>
-               </div>
-             </div>
-          </div>
-
-          {isLoadingData ? (
-             <div className="flex justify-center py-20 no-print"><Loader2 className="w-12 h-12 text-teal-600 animate-spin" /></div>
-          ) : (
-            <>
-              {/* Detailed Top Stats Grid (8 Cards) */}
-              <div className="mb-4 hidden print-only"><h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">Executive Summary & Core Metrics</h2></div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 print-break-inside-avoid print-grid-4">
-                <StatCard icon={Target} title="Total Referrals (Adm.)" value={totalReferrals} color="bg-emerald-500" />
-                <StatCard icon={Users} title="Total Data Collected" value={totalStudents} color="bg-blue-500" />
-                <StatCard icon={Building2} title="Colleges Submitted" value={`${submittedCount} / ${totalColleges}`} color="bg-purple-500" />
-                <StatCard icon={MapPin} title="Total Houses Covered" value={totalHouses} color="bg-orange-500" />
-                
-                <StatCard icon={Headset} title="Call Team Members" value={totalCallTeamMembers} subText={`${totalCallTeamReady} Teams Ready`} color="bg-indigo-500" />
-                <StatCard icon={Calendar} title="Total Meetings Held" value={totalMeetingsConducted} color="bg-rose-500" />
-                <StatCard icon={Video} title="Video Brochures" value={videoBrochureAdopted} subText={`Colleges adopted`} color="bg-pink-500" />
-                <StatCard icon={Activity} title="Avg. Orbit Particip." value={`${avgOrbit}%`} color="bg-teal-500" />
-              </div>
-
-              {/* Line Graph: Performance Curve */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6 print-break-inside-avoid mt-8">
-                 <div className="flex items-center gap-3 mb-6">
-                    <TrendingUp className="w-6 h-6 text-indigo-600 no-print" />
-                    <h2 className="font-bold text-slate-800 text-lg">Performance Distribution Curve</h2>
-                 </div>
-                 {allSubmissions.length > 0 ? (
-                    <PerformanceGraph data={allSubmissions} />
-                 ) : (
-                    <p className="text-center text-slate-500 py-10">No data available for graph.</p>
-                 )}
-              </div>
-
-              {/* Ranks & Insights */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-break-inside-avoid mt-8 print-grid-3">
-                {/* Toppers */}
-                <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                  <div className="bg-emerald-50 border-b border-emerald-100 p-5 flex items-center gap-3">
-                    <Trophy className="w-6 h-6 text-emerald-600 no-print" />
-                    <h2 className="font-bold text-emerald-900 text-lg">Top Performing Institutions</h2>
-                  </div>
-                  <div className="p-0 flex-1">
-                    {top5.length ? top5.map((college, i) => (
-                      <div key={college.id} className="flex justify-between items-center p-4 border-b border-slate-100 hover:bg-slate-50">
-                        <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-700' : i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
-                            {i + 1}
-                          </span>
-                          <div>
-                            <p className="font-bold text-slate-800 text-sm truncate max-w-[170px]" title={college.institutionName}>{college.institutionName}</p>
-                            <p className="text-xs text-slate-500">{college.q15_referral_count || 0} Referrals</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-bold text-emerald-600">{college.score} pts</span>
-                        </div>
-                      </div>
-                    )) : <p className="p-5 text-slate-500 text-sm text-center">No data yet.</p>}
-                  </div>
-                </div>
-
-                {/* Core Metrics */}
-                <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                  <div className="bg-blue-50 border-b border-blue-100 p-5 flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-blue-600 no-print" />
-                    <h2 className="font-bold text-blue-900 text-lg">Strategic Initiative Adoption</h2>
-                  </div>
-                  <div className="p-6 space-y-6 flex-1">
-                    <ProgressBar label="Committee Formed" percentage={percCommittee} color="bg-sky-500" />
-                    <ProgressBar label="Help Desk Setup" percentage={percHelpDesk} color="bg-blue-500" />
-                    <ProgressBar label="Door-to-Door Campaign" percentage={percDoorToDoor} color="bg-indigo-500" />
-                    <ProgressBar label="Social Media Activity" percentage={percSocial} color="bg-purple-500" />
-                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                       <div>
-                         <p className="text-sm text-slate-500 font-semibold">Avg Mgt Rating</p>
-                         <p className="text-xl font-bold text-slate-800">{avgMgt} / 10</p>
-                       </div>
-                       <div>
-                         <p className="text-sm text-slate-500 font-semibold">Avg Orbit %</p>
-                         <p className="text-xl font-bold text-slate-800">{avgOrbit}%</p>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Needs Attention */}
-                <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                  <div className="bg-red-50 border-b border-red-100 p-5 flex items-center gap-3">
-                    <AlertTriangle className="w-6 h-6 text-red-600 no-print" />
-                    <h2 className="font-bold text-red-900 text-lg">Priority Intervention Required</h2>
-                  </div>
-                  <div className="p-0 flex-1">
-                     {bottom5.length ? bottom5.map((college, i) => (
-                      <div key={college.id} className="flex justify-between items-center p-4 border-b border-slate-100 hover:bg-red-50/30">
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm truncate max-w-[190px]" title={college.institutionName}>{college.institutionName}</p>
-                          <p className="text-xs text-red-500 font-medium">Rank: {college.rank}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-bold text-red-600">{college.score} pts</span>
-                        </div>
-                      </div>
-                    )) : <p className="p-5 text-slate-500 text-sm text-center">No sufficient data.</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Suggestions & Plans Sections */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print-break-inside-avoid mt-8 print-grid-2">
-                 {/* Future Plans */}
-                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
-                    <div className="bg-amber-50 border-b border-amber-100 p-5 flex items-center gap-3">
-                      <Lightbulb className="w-6 h-6 text-amber-600 no-print" />
-                      <h2 className="font-bold text-amber-900 text-lg">Proposed Strategic Initiatives</h2>
-                      <span className="ml-auto bg-amber-200 text-amber-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allPlans.length}</span>
-                    </div>
-                    <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
-                       {allPlans.length > 0 ? allPlans.map((plan, i) => (
-                          <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                             <p className="text-xs font-bold text-amber-700 mb-1">{plan.college}</p>
-                             <p className="text-sm text-slate-800 leading-relaxed">{plan.text}</p>
-                          </div>
-                       )) : <p className="text-slate-500 text-sm text-center py-10">No future plans submitted yet.</p>}
-                    </div>
-                 </div>
-
-                 {/* Suggestions/Expected Support */}
-                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
-                    <div className="bg-sky-50 border-b border-sky-100 p-5 flex items-center gap-3">
-                      <MessageSquare className="w-6 h-6 text-sky-600 no-print" />
-                      <h2 className="font-bold text-sky-900 text-lg">Institutional Feedback & Support Req.</h2>
-                      <span className="ml-auto bg-sky-200 text-sky-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allSuggestions.length}</span>
-                    </div>
-                    <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
-                       {allSuggestions.length > 0 ? allSuggestions.map((sug, i) => (
-                          <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                             <p className="text-xs font-bold text-sky-700 mb-1">{sug.college}</p>
-                             <p className="text-sm text-slate-800 leading-relaxed">{sug.text}</p>
-                          </div>
-                       )) : <p className="text-slate-500 text-sm text-center py-10">No suggestions submitted yet.</p>}
-                    </div>
-                 </div>
-              </div>
-
-              {/* Full College Table - Minimal Print Design */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-break-before mt-8">
-                 <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                    <h2 className="font-bold text-slate-800 text-lg">Institutional Performance Matrix</h2>
-                 </div>
-                 <div className="overflow-x-auto p-4">
-                    <table className="w-full text-left border-collapse print-table">
-                       <thead>
-                          <tr className="border-b-2 border-slate-800 text-slate-600 text-xs uppercase tracking-widest">
-                             <th className="py-3 px-2 font-bold">Rank</th>
-                             <th className="py-3 px-2 font-bold">Institution</th>
-                             <th className="py-3 px-2 font-bold text-right">Total Score</th>
-                             <th className="py-3 px-2 font-bold text-right">Referrals</th>
-                             <th className="py-3 px-2 font-bold text-right">Data Col.</th>
-                             <th className="py-3 px-2 font-bold text-right">Orbit %</th>
-                             <th className="py-3 px-2 font-bold text-center">Help Desk</th>
-                          </tr>
-                       </thead>
-                       <tbody className="text-sm">
-                          {allSubmissions.map((c) => (
-                             <tr key={c.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                <td className="py-3 px-2 font-bold text-slate-700">#{c.rank}</td>
-                                <td className="py-3 px-2 font-bold text-slate-800 max-w-[250px] truncate" title={c.institutionName}>{c.institutionName}</td>
-                                <td className="py-3 px-2 font-bold text-indigo-600 text-right">{c.score}</td>
-                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q15_referral_count || 0}</td>
-                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q6_data_collected || 0}</td>
-                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q8_orbit_participation || 0}%</td>
-                                <td className="py-3 px-2 text-center">
-                                  {c.q4_help_desk_formed === 'Yes' ? <span className="text-emerald-600 font-bold">Yes</span> : <span className="text-slate-400 font-bold">-</span>}
-                                </td>
-                             </tr>
-                          ))}
-                       </tbody>
-                    </table>
-                 </div>
-              </div>
-
-            </>
           )}
-        </main>
+
+          <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+            {/* Professional Print Header */}
+            <div className="hidden print-only mb-10 border-b-2 border-slate-800 pb-6">
+               <div className="flex justify-between items-end">
+                 <div>
+                   <h1 className="text-3xl font-serif font-extrabold text-slate-900 mb-2">Admission Analytics Report</h1>
+                   <p className="text-slate-600 font-bold text-sm uppercase tracking-widest">Wafy Wafiyya - Executive Summary</p>
+                 </div>
+                 <div className="text-right">
+                   <p className="text-slate-800 font-bold text-sm">Report Taken: {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                   <p className="text-slate-600 font-medium text-sm mt-1">Institutions Evaluated: {submittedCount} / {totalColleges}</p>
+                   <p className="text-slate-400 text-xs mt-1 italic">Confidential Document</p>
+                 </div>
+               </div>
+            </div>
+
+            {isLoadingData ? (
+               <div className="flex justify-center py-20 no-print"><Loader2 className="w-12 h-12 text-teal-600 animate-spin" /></div>
+            ) : (
+              <>
+                {/* Detailed Top Stats Grid (8 Cards) */}
+                <div className="mb-4 hidden print-only"><h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">Executive Summary & Core Metrics</h2></div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 print-break-inside-avoid print-grid-4">
+                  <StatCard icon={Target} title="Total Referrals (Adm.)" value={totalReferrals} color="bg-emerald-500" />
+                  <StatCard icon={Users} title="Total Data Collected" value={totalStudents} color="bg-blue-500" />
+                  <StatCard icon={Building2} title="Colleges Submitted" value={`${submittedCount} / ${totalColleges}`} color="bg-purple-500" />
+                  <StatCard icon={MapPin} title="Total Houses Covered" value={totalHouses} color="bg-orange-500" />
+                  
+                  <StatCard icon={Headset} title="Call Team Members" value={totalCallTeamMembers} subText={`${totalCallTeamReady} Teams Ready`} color="bg-indigo-500" />
+                  <StatCard icon={Calendar} title="Total Meetings Held" value={totalMeetingsConducted} color="bg-rose-500" />
+                  <StatCard icon={Video} title="Video Brochures" value={videoBrochureAdopted} subText={`Colleges adopted`} color="bg-pink-500" />
+                  <StatCard icon={Activity} title="Avg. Orbit Particip." value={`${avgOrbit}%`} color="bg-teal-500" />
+                </div>
+
+                {/* Line Graph: Performance Curve */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6 print-break-inside-avoid mt-8">
+                   <div className="flex items-center gap-3 mb-6">
+                      <TrendingUp className="w-6 h-6 text-indigo-600 no-print" />
+                      <h2 className="font-bold text-slate-800 text-lg">Performance Distribution Curve</h2>
+                   </div>
+                   {allSubmissions.length > 0 ? (
+                      <PerformanceGraph data={allSubmissions} />
+                   ) : (
+                      <p className="text-center text-slate-500 py-10">No data available for graph.</p>
+                   )}
+                </div>
+
+                {/* Ranks & Insights */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-break-inside-avoid mt-8 print-grid-3">
+                  {/* Toppers */}
+                  <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div className="bg-emerald-50 border-b border-emerald-100 p-5 flex items-center gap-3">
+                      <Trophy className="w-6 h-6 text-emerald-600 no-print" />
+                      <h2 className="font-bold text-emerald-900 text-lg">Top Performing Institutions</h2>
+                    </div>
+                    <div className="p-0 flex-1">
+                      {top5.length ? top5.map((college, i) => (
+                        <div key={college.id} className="flex justify-between items-center p-4 border-b border-slate-100 hover:bg-slate-50">
+                          <div className="flex items-center gap-3">
+                            <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-700' : i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
+                              {i + 1}
+                            </span>
+                            <div>
+                              <p className="font-bold text-slate-800 text-sm truncate max-w-[170px]" title={college.institutionName}>{college.institutionName}</p>
+                              <p className="text-xs text-slate-500">{college.q15_referral_count || 0} Referrals</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-emerald-600">{college.score} pts</span>
+                          </div>
+                        </div>
+                      )) : <p className="p-5 text-slate-500 text-sm text-center">No data yet.</p>}
+                    </div>
+                  </div>
+
+                  {/* Core Metrics */}
+                  <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div className="bg-blue-50 border-b border-blue-100 p-5 flex items-center gap-3">
+                      <Activity className="w-6 h-6 text-blue-600 no-print" />
+                      <h2 className="font-bold text-blue-900 text-lg">Strategic Initiative Adoption</h2>
+                    </div>
+                    <div className="p-6 space-y-6 flex-1">
+                      <ProgressBar label="Committee Formed" percentage={percCommittee} color="bg-sky-500" />
+                      <ProgressBar label="Help Desk Setup" percentage={percHelpDesk} color="bg-blue-500" />
+                      <ProgressBar label="Door-to-Door Campaign" percentage={percDoorToDoor} color="bg-indigo-500" />
+                      <ProgressBar label="Social Media Activity" percentage={percSocial} color="bg-purple-500" />
+                      <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                         <div>
+                           <p className="text-sm text-slate-500 font-semibold">Avg Mgt Rating</p>
+                           <p className="text-xl font-bold text-slate-800">{avgMgt} / 10</p>
+                         </div>
+                         <div>
+                           <p className="text-sm text-slate-500 font-semibold">Avg Orbit %</p>
+                           <p className="text-xl font-bold text-slate-800">{avgOrbit}%</p>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Needs Attention */}
+                  <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div className="bg-red-50 border-b border-red-100 p-5 flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-red-600 no-print" />
+                      <h2 className="font-bold text-red-900 text-lg">Priority Intervention Required</h2>
+                    </div>
+                    <div className="p-0 flex-1">
+                       {bottom5.length ? bottom5.map((college, i) => (
+                        <div key={college.id} className="flex justify-between items-center p-4 border-b border-slate-100 hover:bg-red-50/30">
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm truncate max-w-[190px]" title={college.institutionName}>{college.institutionName}</p>
+                            <p className="text-xs text-red-500 font-medium">Rank: {college.rank}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-red-600">{college.score} pts</span>
+                          </div>
+                        </div>
+                      )) : <p className="p-5 text-slate-500 text-sm text-center">No sufficient data.</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Suggestions & Plans Sections */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print-break-inside-avoid mt-8 print-grid-2">
+                   {/* Future Plans */}
+                   <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                      <div className="bg-amber-50 border-b border-amber-100 p-5 flex items-center gap-3">
+                        <Lightbulb className="w-6 h-6 text-amber-600 no-print" />
+                        <h2 className="font-bold text-amber-900 text-lg">Proposed Strategic Initiatives</h2>
+                        <span className="ml-auto bg-amber-200 text-amber-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allPlans.length}</span>
+                      </div>
+                      <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
+                         {allPlans.length > 0 ? allPlans.map((plan, i) => (
+                            <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                               <p className="text-xs font-bold text-amber-700 mb-1">{plan.college}</p>
+                               <p className="text-sm text-slate-800 leading-relaxed">{plan.text}</p>
+                            </div>
+                         )) : <p className="text-slate-500 text-sm text-center py-10">No future plans submitted yet.</p>}
+                      </div>
+                   </div>
+
+                   {/* Suggestions/Expected Support */}
+                   <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                      <div className="bg-sky-50 border-b border-sky-100 p-5 flex items-center gap-3">
+                        <MessageSquare className="w-6 h-6 text-sky-600 no-print" />
+                        <h2 className="font-bold text-sky-900 text-lg">Institutional Feedback & Support Req.</h2>
+                        <span className="ml-auto bg-sky-200 text-sky-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allSuggestions.length}</span>
+                      </div>
+                      <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
+                         {allSuggestions.length > 0 ? allSuggestions.map((sug, i) => (
+                            <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                               <p className="text-xs font-bold text-sky-700 mb-1">{sug.college}</p>
+                               <p className="text-sm text-slate-800 leading-relaxed">{sug.text}</p>
+                            </div>
+                         )) : <p className="text-slate-500 text-sm text-center py-10">No suggestions submitted yet.</p>}
+                      </div>
+                   </div>
+                </div>
+
+                {/* Full College Table - Minimal Print Design */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-break-before mt-8">
+                   <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                      <h2 className="font-bold text-slate-800 text-lg">Institutional Performance Matrix</h2>
+                   </div>
+                   <div className="overflow-x-auto p-4">
+                      <table className="w-full text-left border-collapse print-table">
+                         <thead>
+                            <tr className="border-b-2 border-slate-800 text-slate-600 text-xs uppercase tracking-widest">
+                               <th className="py-3 px-2 font-bold">Rank</th>
+                               <th className="py-3 px-2 font-bold">Institution</th>
+                               <th className="py-3 px-2 font-bold text-right">Total Score</th>
+                               <th className="py-3 px-2 font-bold text-right">Referrals</th>
+                               <th className="py-3 px-2 font-bold text-right">Data Col.</th>
+                               <th className="py-3 px-2 font-bold text-right">Orbit %</th>
+                               <th className="py-3 px-2 font-bold text-center">Help Desk</th>
+                            </tr>
+                         </thead>
+                         <tbody className="text-sm">
+                            {allSubmissions.map((c) => (
+                               <tr key={c.id} className="border-b border-slate-200 hover:bg-slate-50">
+                                  <td className="py-3 px-2 font-bold text-slate-700">#{c.rank}</td>
+                                  <td className="py-3 px-2 font-bold text-slate-800 max-w-[250px] truncate" title={c.institutionName}>{c.institutionName}</td>
+                                  <td className="py-3 px-2 font-bold text-indigo-600 text-right">{c.score}</td>
+                                  <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q15_referral_count || 0}</td>
+                                  <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q6_data_collected || 0}</td>
+                                  <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q8_orbit_participation || 0}%</td>
+                                  <td className="py-3 px-2 text-center">
+                                    {c.q4_help_desk_formed === 'Yes' ? <span className="text-emerald-600 font-bold">Yes</span> : <span className="text-slate-400 font-bold">-</span>}
+                                  </td>
+                               </tr>
+                            ))}
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
+
+              </>
+            )}
+          </main>
+        </div>
       </div>
     );
   }
@@ -871,52 +879,51 @@ export default function App() {
       `}</style>
 
       <header className="bg-gradient-to-r from-blue-600 to-teal-600 text-white sticky top-0 z-50 shadow-md">
-        <div className="max-w-4xl mx-auto px-4 py-5 flex justify-between items-center">
+        <div className="max-w-4xl mx-auto px-4 py-4 sm:py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Award className="w-7 h-7 text-teal-100 flex-shrink-0" />
-            <h1 className="font-bold text-lg leading-tight hidden sm:block truncate max-w-sm" title={activeCollege.name}>
+            <Award className="w-6 h-6 sm:w-7 sm:h-7 text-teal-100 flex-shrink-0" />
+            <h1 className="font-bold text-base sm:text-lg leading-tight truncate max-w-[200px] sm:max-w-sm" title={activeCollege.name}>
               {activeCollege.name}
             </h1>
-            <h1 className="font-bold text-xl sm:hidden">Drive Tracker</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {saveStatus && (
                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-black/20 rounded-full text-sm font-semibold">
                  {saveStatus === 'Saving...' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudLightning className="w-4 h-4 text-yellow-300" />}
                  {saveStatus}
                </div>
             )}
-            <button onClick={handleLogout} className="text-teal-50 hover:text-white transition-colors flex items-center gap-2 text-base font-semibold bg-white/10 px-4 py-1.5 rounded-full hover:bg-white/20 whitespace-nowrap">
-              <LogOut className="w-5 h-5" /> <span className="hidden sm:inline">Logout</span>
+            <button onClick={handleLogout} className="text-teal-50 hover:text-white transition-colors flex items-center gap-2 text-sm sm:text-base font-semibold bg-white/10 px-3 sm:px-4 py-1.5 rounded-full hover:bg-white/20 whitespace-nowrap">
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
         
         {/* Dynamic Performance Banner - Controlled by Admin showRanks toggle */}
         {(!isLoadingData && myRank && showRanks) && (
-          <div className={`mb-8 p-5 rounded-2xl border ${isRankLow ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'} shadow-sm flex flex-col md:flex-row items-center justify-between gap-4`}>
+          <div className={`mb-6 sm:mb-8 p-4 sm:p-5 rounded-2xl border ${isRankLow ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'} shadow-sm flex flex-col md:flex-row items-center justify-between gap-4`}>
              <div className="flex items-center gap-4">
-               <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${isRankLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                 <Trophy className="w-7 h-7" />
+               <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center flex-shrink-0 ${isRankLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                 <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
                </div>
                <div>
-                 <h3 className={`text-sm font-bold uppercase tracking-wider ${isRankLow ? 'text-red-800' : 'text-emerald-800'}`}>നിങ്ങളുടെ നിലവിലെ റാങ്ക്</h3>
-                 <p className={`text-3xl font-extrabold ${isRankLow ? 'text-red-600' : 'text-emerald-600'}`}>
-                   {myRank} <span className="text-lg font-medium opacity-70">/ {COLLEGES.length}</span>
+                 <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isRankLow ? 'text-red-800' : 'text-emerald-800'}`}>നിങ്ങളുടെ നിലവിലെ റാങ്ക്</h3>
+                 <p className={`text-2xl sm:text-3xl font-extrabold ${isRankLow ? 'text-red-600' : 'text-emerald-600'}`}>
+                   {myRank} <span className="text-base sm:text-lg font-medium opacity-70">/ {COLLEGES.length}</span>
                  </p>
                </div>
              </div>
              {isRankLow && (
-                <div className="bg-white/80 p-3 rounded-xl flex-1 border border-red-100 text-red-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
+                <div className="bg-white/80 p-3 rounded-xl w-full flex-1 border border-red-100 text-red-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p>ശ്രദ്ധിക്കുക: നിങ്ങളുടെ സ്ഥാപനത്തിന്റെ പ്രകടനം നിലവിൽ പിന്നിലാണ്. കൂടുതൽ അഡ്മിഷനുകൾക്കും (Referrals) ഡാറ്റാ ശേഖരണത്തിനും ശ്രദ്ധ നൽകുക! നിങ്ങളുടെ റാങ്ക് ഉയർത്താം.</p>
                 </div>
              )}
              {!isRankLow && (
-                <div className="bg-white/80 p-3 rounded-xl flex-1 border border-emerald-100 text-emerald-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
+                <div className="bg-white/80 p-3 rounded-xl w-full flex-1 border border-emerald-100 text-emerald-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p>അഭിനന്ദനങ്ങൾ! നിങ്ങളുടെ അഡ്മിഷൻ പ്രവർത്തനങ്ങൾ മികച്ച രീതിയിൽ പുരോഗമിക്കുന്നു. ഈ നിലവാരം തുടരുക.</p>
                 </div>
@@ -926,15 +933,15 @@ export default function App() {
 
         {isLoadingData ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 text-teal-600 animate-spin mb-4" />
-            <p className="text-slate-600 font-bold text-lg">വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നു...</p>
+            <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600 animate-spin mb-4" />
+            <p className="text-slate-600 font-bold text-base sm:text-lg">വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നു...</p>
           </div>
         ) : (
-          <form onSubmit={handleManualSave} className="space-y-10">
+          <form onSubmit={handleManualSave} className="space-y-6 sm:space-y-10">
             
             <Section 
               title="സമിതി & ഹെൽപ്പ് ഡെസ്ക്" 
-              icon={<Users className="w-7 h-7 text-blue-600"/>}
+              icon={<Users className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600"/>}
               themeClasses="border-blue-100 bg-white"
               headerClasses="bg-blue-50/80 border-b border-blue-100 text-blue-900"
             >
@@ -949,9 +956,9 @@ export default function App() {
               />
               
               {formData.q1_committee_formed === 'Yes' && (
-                <div className="mt-6 p-5 bg-blue-50/50 rounded-xl space-y-5 border border-blue-100">
-                  <h4 className="font-bold text-blue-900 text-base mb-2">സമിതിയുടെ വിവരങ്ങൾ</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="mt-5 sm:mt-6 p-4 sm:p-5 bg-blue-50/50 rounded-xl space-y-4 sm:space-y-5 border border-blue-100">
+                  <h4 className="font-bold text-blue-900 text-sm sm:text-base mb-1 sm:mb-2">സമിതിയുടെ വിവരങ്ങൾ</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <TextInput label="Chairman" name="q2_chairman" value={formData.q2_chairman} onChange={handleChange} focusClass="focus:ring-blue-500 focus:border-blue-500"/>
                     <TextInput label="Convener" name="q2_convener" value={formData.q2_convener} onChange={handleChange} focusClass="focus:ring-blue-500 focus:border-blue-500"/>
                     <TextInput label="Member 1" name="q2_member1" value={formData.q2_member1} onChange={handleChange} focusClass="focus:ring-blue-500 focus:border-blue-500"/>
@@ -961,7 +968,7 @@ export default function App() {
                 </div>
               )}
 
-              <div className="mt-8 pt-6 border-t border-blue-50">
+              <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-blue-50">
                 <RadioGroup 
                   label="ഹെൽപ്പ് ഡെസ്ക് രൂപീകരിച്ചോ?"
                   name="q4_help_desk_formed"
@@ -990,33 +997,33 @@ export default function App() {
 
             <Section 
               title="സോഷ്യൽ മീഡിയ പേജുകൾ" 
-              icon={<Share2 className="w-7 h-7 text-teal-600"/>}
+              icon={<Share2 className="w-6 h-6 sm:w-7 sm:h-7 text-teal-600"/>}
               themeClasses="border-teal-100 bg-white"
               headerClasses="bg-teal-50/80 border-b border-teal-100 text-teal-900"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <TextInput label="Instagram ID/Link" name="q3_instagram" value={formData.q3_instagram} onChange={handleChange} focusClass="focus:ring-teal-500 focus:border-teal-500"/>
                 <TextInput label="Facebook ID/Link" name="q3_facebook" value={formData.q3_facebook} onChange={handleChange} focusClass="focus:ring-teal-500 focus:border-teal-500"/>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-teal-50">
-                <label className="block text-base font-bold text-slate-700 mb-3">Other IDs (മറ്റ് പ്ലാറ്റ്ഫോമുകൾ ഉപയോഗിക്കുന്നുണ്ടെങ്കിൽ ടിക്ക് ചെയ്യുക)</label>
-                <div className="flex flex-wrap gap-4 mb-5">
-                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-4 py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
+              <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-teal-50">
+                <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2 sm:mb-3">Other IDs (മറ്റ് പ്ലാറ്റ്ഫോമുകൾ ഉപയോഗിക്കുന്നുണ്ടെങ്കിൽ ടിക്ക് ചെയ്യുക)</label>
+                <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-5">
+                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
                      <input type="checkbox" name="q3_has_youtube" checked={formData.q3_has_youtube} onChange={handleChange} className="w-4 h-4 text-teal-600 rounded" />
-                     <span className="font-semibold text-teal-900">YouTube</span>
+                     <span className="font-semibold text-sm sm:text-base text-teal-900">YouTube</span>
                    </label>
-                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-4 py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
+                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
                      <input type="checkbox" name="q3_has_twitter" checked={formData.q3_has_twitter} onChange={handleChange} className="w-4 h-4 text-teal-600 rounded" />
-                     <span className="font-semibold text-teal-900">Twitter (X)</span>
+                     <span className="font-semibold text-sm sm:text-base text-teal-900">Twitter (X)</span>
                    </label>
-                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-4 py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
+                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
                      <input type="checkbox" name="q3_has_linkedin" checked={formData.q3_has_linkedin} onChange={handleChange} className="w-4 h-4 text-teal-600 rounded" />
-                     <span className="font-semibold text-teal-900">LinkedIn</span>
+                     <span className="font-semibold text-sm sm:text-base text-teal-900">LinkedIn</span>
                    </label>
-                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-4 py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
+                   <label className="flex items-center gap-2 cursor-pointer bg-teal-50 px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-teal-100 hover:bg-teal-100">
                      <input type="checkbox" name="q3_has_others" checked={formData.q3_has_others} onChange={handleChange} className="w-4 h-4 text-teal-600 rounded" />
-                     <span className="font-semibold text-teal-900">Others</span>
+                     <span className="font-semibold text-sm sm:text-base text-teal-900">Others</span>
                    </label>
                 </div>
 
@@ -1036,7 +1043,7 @@ export default function App() {
                 </div>
               </div>
               
-              <div className="mt-8 border-t border-teal-50 pt-5">
+              <div className="mt-6 sm:mt-8 border-t border-teal-50 pt-4 sm:pt-5">
                 <DynamicList 
                   label="പ്രചരണത്തിൻ്റെ ഭാഗമായി സ്ഥാപനം പുറത്തിറക്കിയ സോഷ്യൽ മീഡിയ പോസ്റ്റുകളുടെ ലിങ്കുകൾ നൽകാം."
                   icon={Megaphone}
@@ -1052,58 +1059,58 @@ export default function App() {
 
             <Section 
               title="പ്രവർത്തനങ്ങൾ & ക്യാമ്പയിൻ" 
-              icon={<Megaphone className="w-7 h-7 text-purple-600"/>}
+              icon={<Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600"/>}
               themeClasses="border-purple-100 bg-white"
               headerClasses="bg-purple-50/80 border-b border-purple-100 text-purple-900"
             >
-              <div className="space-y-8">
-                <div className="p-5 rounded-xl border bg-purple-50/50 border-purple-100">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Calendar className="w-6 h-6 text-purple-600" />
-                    <h4 className="font-bold text-purple-900 text-base leading-relaxed">പ്രചരണ പ്രവർത്തനങ്ങൾ വിലയിരുത്താനായി കൂടിയ മീറ്റിങ്ങുകളുടെ വിവരങ്ങൾ (Max 6 Counted for Rank)</h4>
+              <div className="space-y-6 sm:space-y-8">
+                <div className="p-4 sm:p-5 rounded-xl border bg-purple-50/50 border-purple-100">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                    <h4 className="font-bold text-purple-900 text-sm sm:text-base leading-relaxed">പ്രചരണ പ്രവർത്തനങ്ങൾ വിലയിരുത്താനായി കൂടിയ മീറ്റിങ്ങുകളുടെ വിവരങ്ങൾ (Max 6 Counted for Rank)</h4>
                   </div>
                   <div className="space-y-4">
                     {formData.q5_meetings.map((meeting, index) => (
                       <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                         <div className="flex-1 w-full">
-                          <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">തിയ്യതി (Date)</label>
+                          <label className="block text-[11px] sm:text-xs font-bold text-slate-500 mb-1 ml-1">തിയ്യതി (Date)</label>
                           <input
                             type="date"
                             value={meeting.date}
                             onChange={(e) => handleMeetingChange(index, 'date', e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-base text-slate-800 bg-white shadow-sm"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-sm sm:text-base text-slate-800 bg-white shadow-sm"
                           />
                         </div>
                         <div className="flex-1 w-full">
-                           <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">പങ്കെടുത്തവർ (No. of Persons)</label>
+                           <label className="block text-[11px] sm:text-xs font-bold text-slate-500 mb-1 ml-1">പങ്കെടുത്തവർ (No. of Persons)</label>
                           <input
                             type="number"
                             min="0"
                             placeholder="എണ്ണം"
                             value={meeting.participants}
                             onChange={(e) => handleMeetingChange(index, 'participants', e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-base text-slate-800 bg-white shadow-sm"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-sm sm:text-base text-slate-800 bg-white shadow-sm"
                           />
                         </div>
-                        <div className="mt-5 sm:mt-6">
-                           <button type="button" onClick={() => removeMeeting(index)} className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors bg-white shadow-sm" title="Remove">
-                            <Trash2 className="w-6 h-6" />
+                        <div className="mt-2 sm:mt-6 w-full sm:w-auto text-right">
+                           <button type="button" onClick={() => removeMeeting(index)} className="p-2 sm:p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors bg-white shadow-sm inline-flex items-center gap-2" title="Remove">
+                            <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" /> <span className="sm:hidden text-sm font-semibold">Remove</span>
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button type="button" onClick={addMeeting} className="mt-5 flex items-center gap-2 px-5 py-3 bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold rounded-xl transition-colors border border-purple-200 text-base shadow-sm">
-                    <Plus className="w-5 h-5" /> പുതിയ മീറ്റിംഗ് ചേർക്കുക (Add Meeting)
+                  <button type="button" onClick={addMeeting} className="mt-4 sm:mt-5 flex justify-center w-full sm:w-auto items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold rounded-xl transition-colors border border-purple-200 text-sm sm:text-base shadow-sm">
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> പുതിയ മീറ്റിംഗ് ചേർക്കുക
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-purple-50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-5 sm:pt-6 border-t border-purple-50">
                   <TextInput label="എത്ര കുട്ടികളുടെ ഡാറ്റ കളക്ട് ചെയ്തു?" type="number" min="0" name="q6_data_collected" value={formData.q6_data_collected} onChange={handleChange} focusClass="focus:ring-purple-500 focus:border-purple-500"/>
                   <TextInput label="അതിൽ എത്ര പേരെ ഫോളോ ചെയ്തു?" type="number" min="0" name="q6_followed_up" value={formData.q6_followed_up} onChange={handleChange} focusClass="focus:ring-purple-500 focus:border-purple-500"/>
                 </div>
 
-                <div className="pt-6 border-t border-purple-50">
+                <div className="pt-5 sm:pt-6 border-t border-purple-50">
                   <RadioGroup 
                     label="ഫീൽഡ് വർക്ക്, ഡോർ റ്റു ഡോർ ക്യാമ്പയിൻ നടന്നോ?"
                     name="q7_door_to_door"
@@ -1114,15 +1121,15 @@ export default function App() {
                     dotColor="bg-purple-600"
                   />
                   {formData.q7_door_to_door === 'Yes' && (
-                    <div className="mt-4 p-5 bg-purple-50/50 rounded-xl border border-purple-100">
+                    <div className="mt-3 sm:mt-4 p-4 sm:p-5 bg-purple-50/50 rounded-xl border border-purple-100">
                       <TextInput label="എത്ര വീടുകൾ/ ആളുകളെ കണ്ടു?" type="number" min="0" name="q7_houses_covered" value={formData.q7_houses_covered} onChange={handleChange} focusClass="focus:ring-purple-500 focus:border-purple-500"/>
                     </div>
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-purple-50">
-                  <h4 className="font-bold text-purple-900 text-lg mb-4">പ്രചരണ പ്രവർത്തനങ്ങളുമായി ബന്ധപ്പെട്ട് സംഘടിപ്പിച്ച മറ്റു പരിപാടികളുടെ വിവരങ്ങൾ</h4>
-                  <div className="grid grid-cols-1 gap-5">
+                <div className="pt-5 sm:pt-6 border-t border-purple-50">
+                  <h4 className="font-bold text-purple-900 text-base sm:text-lg mb-3 sm:mb-4">പ്രചരണ പ്രവർത്തനങ്ങളുമായി ബന്ധപ്പെട്ട് സംഘടിപ്പിച്ച മറ്റു പരിപാടികളുടെ വിവരങ്ങൾ</h4>
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5">
                     <TextInput label="പരിപാടികളുടെ എണ്ണം (Career Guidance, etc..)" type="number" min="0" name="q12_other_events_count" value={formData.q12_other_events_count} onChange={handleChange} focusClass="focus:ring-purple-500 focus:border-purple-500"/>
                     <DynamicList 
                       label="പ്രസക്തമായ ലിങ്കുകൾ (Links)"
@@ -1136,7 +1143,7 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="pt-6 border-t border-purple-50">
+                <div className="pt-5 sm:pt-6 border-t border-purple-50">
                   <RadioGroup 
                     label="കാൾ ക്യാമ്പയിന് ഉപയോഗപ്പെടുത്താൻ പറ്റിയ ടീമിനെ തയ്യാറാക്കിയിട്ടുണ്ടോ?"
                     name="q16_call_team_ready"
@@ -1147,13 +1154,13 @@ export default function App() {
                     dotColor="bg-purple-600"
                   />
                   {formData.q16_call_team_ready === 'Yes' && (
-                    <div className="mt-4 p-5 bg-purple-50/50 rounded-xl border border-purple-100">
+                    <div className="mt-3 sm:mt-4 p-4 sm:p-5 bg-purple-50/50 rounded-xl border border-purple-100">
                       <TextInput label="എത്രപേരുണ്ട്?" type="number" min="0" name="q16_call_team_count" value={formData.q16_call_team_count} onChange={handleChange} focusClass="focus:ring-purple-500 focus:border-purple-500"/>
                     </div>
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-purple-50">
+                <div className="pt-5 sm:pt-6 border-t border-purple-50">
                   <RadioGroup 
                     label="സ്ഥാപനത്തെ പരിചയപ്പെടുത്തുന്ന വീഡിയോ ബ്രോഷർ പുറത്തിറക്കിയോ?"
                     name="q17_video_brochure"
@@ -1164,7 +1171,7 @@ export default function App() {
                     dotColor="bg-purple-600"
                   />
                   {formData.q17_video_brochure === 'Yes' && (
-                    <div className="mt-4">
+                    <div className="mt-3 sm:mt-4">
                       <DynamicList 
                         label="വീഡിയോ ലിങ്കുകൾ (Video Links)"
                         values={formData.q17_video_links}
@@ -1182,16 +1189,16 @@ export default function App() {
 
             <Section 
               title="ഓർബിറ്റ് & പങ്കാളിത്തം" 
-              icon={<Target className="w-7 h-7 text-emerald-600"/>}
+              icon={<Target className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600"/>}
               themeClasses="border-emerald-100 bg-white"
               headerClasses="bg-emerald-50/80 border-b border-emerald-100 text-emerald-900"
             >
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
-                  <label className="block text-base font-bold text-emerald-900 mb-3">
-                    ഓർബിറ്റ് മീറ്റിംഗ് പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-sm ml-2 font-bold">{formData.q8_orbit_participation}%</span>
+                  <label className="block text-sm sm:text-base font-bold text-emerald-900 mb-2 sm:mb-3">
+                    ഓർബിറ്റ് മീറ്റിംഗ് പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md text-xs sm:text-sm ml-2 font-bold">{formData.q8_orbit_participation}%</span>
                   </label>
-                  <div className="relative py-4">
+                  <div className="relative py-3 sm:py-4">
                      <input 
                       type="range" min="0" max="100" 
                       name="q8_orbit_participation"
@@ -1203,7 +1210,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-emerald-50">
+                <div className="pt-5 sm:pt-6 border-t border-emerald-50">
                   <RadioGroup 
                     label="ഓർബിറ്റ് മീറ്റിങ്ങിൽ പങ്കെടുക്കാത്തവരെ പ്രത്യേക വിളിച്ചു കാരണം അന്വേഷിച്ചോ, നടപടിയെടുത്തോ?"
                     name="q9_orbit_absentees_followed"
@@ -1214,17 +1221,17 @@ export default function App() {
                     dotColor="bg-emerald-600"
                   />
                   {formData.q9_orbit_absentees_followed === 'Yes' && (
-                    <div className="mt-4 p-5 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                    <div className="mt-3 sm:mt-4 p-4 sm:p-5 bg-emerald-50/50 rounded-xl border border-emerald-100">
                       <TextArea label="കൂടുതൽ വിവരങ്ങൾ (Details)" name="q9_orbit_absentees_details" value={formData.q9_orbit_absentees_details} onChange={handleChange} focusClass="focus:ring-emerald-500 focus:border-emerald-500"/>
                     </div>
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-emerald-50">
-                  <label className="block text-base font-bold text-emerald-900 mb-3">
-                    പ്രചരണ പ്രവർത്തനങ്ങളിൽ സ്ഥാപനത്തിൻറെ മാനേജ്മെൻറ് പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-sm ml-2 font-bold">{formData.q10_management_rating}/10</span>
+                <div className="pt-5 sm:pt-6 border-t border-emerald-50">
+                  <label className="block text-sm sm:text-base font-bold text-emerald-900 mb-2 sm:mb-3">
+                    പ്രചരണ പ്രവർത്തനങ്ങളിൽ സ്ഥാപനത്തിൻറെ മാനേജ്മെൻറ് പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md text-xs sm:text-sm ml-2 font-bold">{formData.q10_management_rating}/10</span>
                   </label>
-                  <div className="relative py-4">
+                  <div className="relative py-3 sm:py-4">
                     <input 
                       type="range" min="0" max="10" 
                       name="q10_management_rating"
@@ -1234,16 +1241,16 @@ export default function App() {
                       style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${formData.q10_management_rating * 10}%, #d8b4fe ${formData.q10_management_rating * 10}%, #d8b4fe 100%)` }}
                     />
                   </div>
-                  <div className="flex justify-between text-sm text-emerald-600/80 mt-1 font-semibold">
+                  <div className="flex justify-between text-xs sm:text-sm text-emerald-600/80 mt-1 font-semibold">
                     <span>0 (None)</span><span>10 (Perfect)</span>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-emerald-50">
-                  <label className="block text-base font-bold text-emerald-900 mb-3">
-                    സ്ഥാപനത്തിന്റെ അധ്യാപകരുടെ പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-md text-sm ml-2 font-bold">{formData.q11_teachers_rating}/10</span>
+                <div className="pt-5 sm:pt-6 border-t border-emerald-50">
+                  <label className="block text-sm sm:text-base font-bold text-emerald-900 mb-2 sm:mb-3">
+                    സ്ഥാപനത്തിന്റെ അധ്യാപകരുടെ പങ്കാളിത്തം എത്ര? <span className="inline-block bg-emerald-100 text-emerald-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md text-xs sm:text-sm ml-2 font-bold">{formData.q11_teachers_rating}/10</span>
                   </label>
-                  <div className="relative py-4">
+                  <div className="relative py-3 sm:py-4">
                     <input 
                       type="range" min="0" max="10" 
                       name="q11_teachers_rating"
@@ -1253,7 +1260,7 @@ export default function App() {
                       style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${formData.q11_teachers_rating * 10}%, #d8b4fe ${formData.q11_teachers_rating * 10}%, #d8b4fe 100%)` }}
                     />
                   </div>
-                  <div className="flex justify-between text-sm text-emerald-600/80 mt-1 font-semibold">
+                  <div className="flex justify-between text-xs sm:text-sm text-emerald-600/80 mt-1 font-semibold">
                     <span>0 (None)</span><span>10 (Perfect)</span>
                   </div>
                 </div>
@@ -1262,11 +1269,11 @@ export default function App() {
 
             <Section 
               title="ഫീഡ്‌ബാക്ക് & പ്രോത്സാഹനം" 
-              icon={<Phone className="w-7 h-7 text-amber-600"/>}
+              icon={<Phone className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600"/>}
               themeClasses="border-amber-100 bg-white"
               headerClasses="bg-amber-50/80 border-b border-amber-100 text-amber-900"
             >
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <TextInput 
                   label="സ്ഥാപനത്തിൻറെ റഫറൽ കോഡിൽ അപേക്ഷിച്ച വിദ്യാർഥികളുടെ എണ്ണം. (Crucial for Rank)" 
                   type="number" 
@@ -1277,7 +1284,7 @@ export default function App() {
                   focusClass="focus:ring-amber-500 focus:border-amber-500"
                 />
                 
-                <div className="pt-6 border-t border-amber-50">
+                <div className="pt-5 sm:pt-6 border-t border-amber-50">
                   <RadioGroup 
                     label="നന്നായി പ്രവർത്തിക്കുന്ന വിദ്യാർത്ഥികൾക്ക് സ്ഥാപനം എന്തെങ്കിലും പ്രോത്സാഹന പദ്ധതികൾ ഏർപ്പെടുത്തിയോ?"
                     name="q13_student_motivation_formed"
@@ -1288,7 +1295,7 @@ export default function App() {
                     dotColor="bg-amber-600"
                   />
                   {formData.q13_student_motivation_formed === 'Yes' && (
-                     <div className="mt-4 p-5 bg-amber-50/50 rounded-xl border border-amber-100">
+                     <div className="mt-3 sm:mt-4 p-4 sm:p-5 bg-amber-50/50 rounded-xl border border-amber-100">
                         <TextArea 
                           label="വിവരങ്ങൾ.." 
                           name="q13_student_motivation" 
@@ -1300,7 +1307,7 @@ export default function App() {
                   )}
                 </div>
                 
-                <div className="pt-6 border-t border-amber-50">
+                <div className="pt-5 sm:pt-6 border-t border-amber-50">
                   <TextArea 
                     label="എൻട്രൻസ് ബോർഡിന്റെ ഭാഗത്ത് നിന്ന് സ്ഥാപനങ്ങൾക്ക് ലഭിക്കണമെന്ന് കരുതുന്ന പിന്തുണ..?" 
                     name="q18_expected_support" 
@@ -1310,7 +1317,7 @@ export default function App() {
                   />
                 </div>
 
-                <div className="pt-6 border-t border-amber-50">
+                <div className="pt-5 sm:pt-6 border-t border-amber-50">
                   <DynamicList 
                       label="പ്രചരണ പ്രവർത്തനങ്ങൾക്കായി തയ്യാറായിക്കൊണ്ടിരിക്കുന്ന മറ്റു പദ്ധതികൾ..?"
                       values={formData.q19_future_plans}
@@ -1325,28 +1332,28 @@ export default function App() {
             </Section>
 
             {/* Save Button */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky bottom-4 flex flex-col sm:flex-row items-center justify-between gap-5 z-40">
-              <div className="text-base text-slate-500 flex-1">
+            <div className="bg-white p-4 sm:p-6 rounded-t-2xl sm:rounded-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] sm:shadow-sm border border-slate-200 sticky bottom-0 sm:bottom-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-5 z-40 mx-[-8px] sm:mx-0">
+              <div className="text-sm sm:text-base text-slate-500 flex-1 text-center sm:text-left w-full">
                 {saveStatus === 'Saving...' ? (
-                  <span className="flex items-center text-slate-600 font-semibold bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 inline-flex">
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving Data...
+                  <span className="flex justify-center sm:justify-start items-center text-slate-600 font-semibold bg-slate-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-slate-200 inline-flex w-full sm:w-auto">
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" /> Saving Data...
                   </span>
                 ) : saveStatus === 'Saved Successfully' ? (
-                  <span className="flex items-center text-green-700 font-bold bg-green-50 px-4 py-2 rounded-xl border border-green-200 inline-flex">
-                    <CheckCircle2 className="w-6 h-6 mr-2" /> വിവരങ്ങൾ സുരക്ഷിതമാണ് (Saved)
+                  <span className="flex justify-center sm:justify-start items-center text-green-700 font-bold bg-green-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-green-200 inline-flex w-full sm:w-auto">
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2" /> വിവരങ്ങൾ സുരക്ഷിതമാണ് (Saved)
                   </span>
                 ) : (
-                  <span className="font-semibold text-slate-700">വിവരങ്ങൾ നൽകിയ ശേഷം സേവ് ചെയ്യാൻ മറക്കരുത്.</span>
+                  <span className="font-semibold text-slate-700 block mt-1 sm:mt-0">വിവരങ്ങൾ നൽകിയ ശേഷം സേവ് ചെയ്യാൻ മറക്കരുത്.</span>
                 )}
               </div>
               <button 
                 type="submit" 
                 disabled={isSaving}
-                className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-white text-lg shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-3 ${
+                className={`w-full sm:w-auto px-6 py-3.5 sm:px-10 sm:py-4 rounded-xl font-bold text-white text-base sm:text-lg shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 sm:gap-3 ${
                   isSaving ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 hover:-translate-y-1'
                 }`}
               >
-                {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+                {isSaving ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <Save className="w-5 h-5 sm:w-6 sm:h-6" />}
                 {isSaving ? 'Saving...' : 'Save Updates'}
               </button>
             </div>
@@ -1435,11 +1442,11 @@ function ProgressBar({ label, percentage, color }) {
 function Section({ title, icon, children, themeClasses, headerClasses }) {
   return (
     <div className={`rounded-2xl shadow-sm border overflow-hidden ${themeClasses}`}>
-      <div className={`px-7 py-5 flex items-center gap-4 ${headerClasses}`}>
+      <div className={`px-4 py-4 sm:px-7 sm:py-5 flex items-center gap-3 sm:gap-4 ${headerClasses}`}>
         {icon}
-        <h2 className="text-xl font-bold">{title}</h2>
+        <h2 className="text-lg sm:text-xl font-bold">{title}</h2>
       </div>
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {children}
       </div>
     </div>
@@ -1449,7 +1456,7 @@ function Section({ title, icon, children, themeClasses, headerClasses }) {
 function TextInput({ label, name, value, onChange, type = "text", min, placeholder, className="", focusClass="focus:ring-indigo-500 focus:border-indigo-500" }) {
   return (
     <div className={className}>
-      <label className="block text-base font-bold text-slate-700 mb-2">{label}</label>
+      <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">{label}</label>
       <input
         type={type}
         name={name}
@@ -1457,7 +1464,7 @@ function TextInput({ label, name, value, onChange, type = "text", min, placehold
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full px-5 py-3.5 text-base rounded-xl border border-slate-300 outline-none transition-all text-slate-800 bg-slate-50 hover:bg-white focus:bg-white ${focusClass}`}
+        className={`w-full px-4 py-3 sm:px-5 sm:py-3.5 text-sm sm:text-base rounded-xl border border-slate-300 outline-none transition-all text-slate-800 bg-slate-50 hover:bg-white focus:bg-white ${focusClass}`}
       />
     </div>
   );
@@ -1466,14 +1473,14 @@ function TextInput({ label, name, value, onChange, type = "text", min, placehold
 function TextArea({ label, name, value, onChange, placeholder, rows = 3, className="", focusClass="focus:ring-indigo-500 focus:border-indigo-500" }) {
   return (
     <div className={className}>
-      <label className="block text-base font-bold text-slate-700 mb-2">{label}</label>
+      <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">{label}</label>
       <textarea
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
         rows={rows}
-        className={`w-full px-5 py-3.5 text-base rounded-xl border border-slate-300 outline-none transition-all text-slate-800 bg-slate-50 hover:bg-white focus:bg-white resize-y ${focusClass}`}
+        className={`w-full px-4 py-3 sm:px-5 sm:py-3.5 text-sm sm:text-base rounded-xl border border-slate-300 outline-none transition-all text-slate-800 bg-slate-50 hover:bg-white focus:bg-white resize-y ${focusClass}`}
       />
     </div>
   );
@@ -1482,10 +1489,10 @@ function TextArea({ label, name, value, onChange, placeholder, rows = 3, classNa
 function RadioGroup({ label, name, value, onChange, options, accentColor="peer-checked:border-indigo-600", dotColor="bg-indigo-600" }) {
   return (
     <div>
-      <label className="block text-base font-bold text-slate-700 mb-3">{label}</label>
-      <div className="flex flex-wrap gap-6">
+      <label className="block text-sm sm:text-base font-bold text-slate-700 mb-3">{label}</label>
+      <div className="flex flex-wrap gap-4 sm:gap-6">
         {options.map(option => (
-          <label key={option} className="flex items-center gap-3 cursor-pointer group">
+          <label key={option} className="flex items-center gap-2 sm:gap-3 cursor-pointer group">
             <div className="relative flex items-center">
               <input
                 type="radio"
@@ -1495,11 +1502,11 @@ function RadioGroup({ label, name, value, onChange, options, accentColor="peer-c
                 onChange={onChange}
                 className={`peer sr-only`}
               />
-              <div className={`w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-slate-400 ${accentColor} flex items-center justify-center transition-colors bg-white`}>
-                <div className={`w-3 h-3 rounded-full ${dotColor} transition-transform ${value === option ? 'scale-100' : 'scale-0'}`}></div>
+              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-slate-300 group-hover:border-slate-400 ${accentColor} flex items-center justify-center transition-colors bg-white`}>
+                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${dotColor} transition-transform ${value === option ? 'scale-100' : 'scale-0'}`}></div>
               </div>
             </div>
-            <span className="text-slate-700 font-bold text-lg group-hover:text-slate-900 transition-colors">{option}</span>
+            <span className="text-slate-700 font-bold text-base sm:text-lg group-hover:text-slate-900 transition-colors">{option}</span>
           </label>
         ))}
       </div>
@@ -1532,24 +1539,24 @@ function DynamicList({ label, values, onChange, type = "text", placeholder, addT
   const t = themeClasses[theme] || themeClasses.indigo;
 
   return (
-    <div className={`p-5 rounded-xl border ${t.container}`}>
+    <div className={`p-4 sm:p-5 rounded-xl border ${t.container}`}>
       {label && (
-        <div className="flex items-center gap-3 mb-4">
-          {Icon && <Icon className={`w-6 h-6 ${t.icon}`} />}
-          <h4 className={`font-bold ${t.headerText} text-base leading-relaxed`}>{label}</h4>
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${t.icon}`} />}
+          <h4 className={`font-bold ${t.headerText} text-sm sm:text-base leading-relaxed`}>{label}</h4>
         </div>
       )}
       
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {values.map((val, index) => (
-          <div key={index} className="flex gap-3 items-start">
-            <div className="flex-1">
+          <div key={index} className="flex gap-2 sm:gap-3 items-start">
+            <div className="flex-1 w-full">
               {type === 'text' && placeholder === 'പദ്ധതി വിവരങ്ങൾ...' ? (
                  <textarea
                    value={val}
                    onChange={(e) => handleChange(index, e.target.value)}
                    placeholder={placeholder}
-                   className={`w-full px-5 py-3.5 rounded-xl border border-white focus:ring-2 ${t.focus} outline-none transition-all text-base text-slate-800 bg-white shadow-sm resize-y`}
+                   className={`w-full px-4 py-3 sm:px-5 sm:py-3.5 rounded-xl border border-white focus:ring-2 ${t.focus} outline-none transition-all text-sm sm:text-base text-slate-800 bg-white shadow-sm resize-y`}
                    rows={2}
                  />
               ) : (
@@ -1558,17 +1565,17 @@ function DynamicList({ label, values, onChange, type = "text", placeholder, addT
                   value={val}
                   onChange={(e) => handleChange(index, e.target.value)}
                   placeholder={placeholder}
-                  className={`w-full px-5 py-3.5 rounded-xl border border-white focus:ring-2 ${t.focus} outline-none transition-all text-base text-slate-800 bg-white shadow-sm`}
+                  className={`w-full px-4 py-3 sm:px-5 sm:py-3.5 rounded-xl border border-white focus:ring-2 ${t.focus} outline-none transition-all text-sm sm:text-base text-slate-800 bg-white shadow-sm`}
                 />
               )}
             </div>
             <button
               type="button"
               onClick={() => handleRemove(index)}
-              className="p-3.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100 bg-white shadow-sm"
+              className="p-3 sm:p-3.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100 bg-white shadow-sm flex-shrink-0"
               title="Remove"
             >
-              <Trash2 className="w-6 h-6" />
+              <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         ))}
@@ -1577,9 +1584,9 @@ function DynamicList({ label, values, onChange, type = "text", placeholder, addT
       <button
         type="button"
         onClick={handleAdd}
-        className={`mt-5 flex items-center gap-2 px-5 py-3 ${t.bg} ${t.text} font-bold rounded-xl transition-colors border ${t.border} text-base shadow-sm`}
+        className={`mt-4 sm:mt-5 flex justify-center w-full sm:w-auto items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 ${t.bg} ${t.text} font-bold rounded-xl transition-colors border ${t.border} text-sm sm:text-base shadow-sm`}
       >
-        <Plus className="w-5 h-5" /> {addText}
+        <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> {addText}
       </button>
     </div>
   );
@@ -1622,12 +1629,12 @@ function SearchableSelect({ options, value, onChange, placeholder }) {
   return (
     <div ref={wrapperRef} className="relative w-full">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-slate-400" />
+        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
         </div>
         <input
           type="text"
-          className="w-full pl-12 pr-10 py-4 text-base rounded-xl border-2 border-slate-200 focus:ring-0 focus:border-teal-500 transition-all outline-none bg-white font-medium text-slate-800 placeholder-slate-400"
+          className="w-full pl-10 pr-10 py-3 sm:pl-12 sm:pr-10 sm:py-4 text-sm sm:text-base rounded-xl border-2 border-slate-200 focus:ring-0 focus:border-teal-500 transition-all outline-none bg-white font-medium text-slate-800 placeholder-slate-400"
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => {
@@ -1639,8 +1646,8 @@ function SearchableSelect({ options, value, onChange, placeholder }) {
           }}
           onFocus={() => setIsOpen(true)}
         />
-        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-          <ChevronDown className="h-5 w-5 text-slate-400" />
+        <div className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center pointer-events-none cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+          <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
         </div>
       </div>
       
@@ -1650,7 +1657,7 @@ function SearchableSelect({ options, value, onChange, placeholder }) {
             filteredOptions.map((opt) => (
               <li
                 key={opt.id}
-                className="px-5 py-3.5 hover:bg-teal-50 cursor-pointer text-slate-800 text-sm sm:text-base font-semibold border-b last:border-b-0 border-slate-100 transition-colors"
+                className="px-4 py-3 sm:px-5 sm:py-3.5 hover:bg-teal-50 cursor-pointer text-slate-800 text-sm sm:text-base font-semibold border-b last:border-b-0 border-slate-100 transition-colors"
                 onClick={() => {
                   onChange(opt.id);
                   setSearchTerm(opt.name);
@@ -1661,7 +1668,7 @@ function SearchableSelect({ options, value, onChange, placeholder }) {
               </li>
             ))
           ) : (
-            <li className="px-5 py-4 text-slate-500 text-base font-medium text-center">സ്ഥാപനം കണ്ടെത്താനായില്ല (No Match)</li>
+            <li className="px-4 py-3 sm:px-5 sm:py-4 text-slate-500 text-sm sm:text-base font-medium text-center">സ്ഥാപനം കണ്ടെത്താനായില്ല (No Match)</li>
           )}
         </ul>
       )}
