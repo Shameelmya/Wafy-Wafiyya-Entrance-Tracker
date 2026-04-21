@@ -57,7 +57,18 @@ export const COLLEGES = [
   { id: "c129", passkey: "DAF6Y", name: "129 - DARUL ATHFAL WAFY ARTS COLLEGE" },
   { id: "c131", passkey: "VRK3W", name: "131 - VARAKKAL MULLAKOYA THANGAL WAFY COLLEGE" },
   { id: "c132", passkey: "IAW7Q", name: "132 - IRSHADUL ATHFAL WAFIYYA ARTS COLLEGE" },
-  { id: "c134", passkey: "SUM9D", name: "134 - SHAMSUL ULAMA MEMORIAL SALIHEEN WAFY COLLEGE" }
+  { id: "c134", passkey: "SUM9D", name: "134 - SHAMSUL ULAMA MEMORIAL RIYALUSSALIHEEN WAFY COLLEGE" },
+  { id: "c138", passkey: "MNR1X", name: "138 - MUNEERUL ISLAM ARABIC (WAFY) COLLEGE , KUNDUMAN, KOLLAM" },
+  { id: "c141", passkey: "HVW5Z", name: "141 - HOPE VALLEY WOMEN’S COLLEGE (WAFIYYA)" },
+  { id: "c142", passkey: "ESC1L", name: "142 - ELITE SHE CAMPUS WAFIYYA ARTS COLLEGE, PATTARNADAKKAV" },
+  { id: "c144", passkey: "PTM6W", name: "144 - PTM ARTS & SCIENCE COLLEGE FOR GIRLS (WAFIYYA)" },
+  { id: "c145", passkey: "LOR2D", name: "145 - LORE ACADEMY DAY COLLEGE FOR WOMEN" },
+  { id: "c146", passkey: "CMM1J", name: "146 - CHELAKKAD MUHAMMED MUSLIYAR ISLAMIC ARTS COLLEGE FOR GIRLS WAFIYYA" },
+  { id: "c147", passkey: "NMI7A", name: "147 - NAFEESATHUL MISRIYA INSTITUTE OF INNOVATIVE STUDIES" },
+  { id: "c148", passkey: "FLH4A", name: "148 - FALAHIYA ISLAMIC ARABIC COLLEGE" },
+  { id: "c149", passkey: "SPL9Q", name: "149 - SOULPATH COLLEGE FOR ADVANCED STUDIES (WAFIYYA)" },
+  { id: "c150", passkey: "HST3E", name: "150 - HYDERALI SHIHAB THANGAL COLLEGE FOR WOMEN (WAFIYYA)" },
+  { id: "c151", passkey: "ESC9P", name: "151 - ESCOLA INTERNATIONAL" }
 ];
 
 // --- Score Calculation Algorithm ---
