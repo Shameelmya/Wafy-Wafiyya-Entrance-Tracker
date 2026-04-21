@@ -115,14 +115,18 @@ const calculateScore = (data) => {
 
 // --- Firebase Setup ---
 const canvasFirebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+// 👇👇👇 VERCEL-ൽ പ്രവർത്തിക്കാൻ ഇവിടെ നിങ്ങളുടെ യഥാർത്ഥ FIREBASE CONFIG നൽകണം 👇👇👇
 const fallbackFirebaseConfig = {
-  apiKey: "AIzaSyCDa--GhMiHyymM-4y6eyC67IZq8LLcGbM",
-  authDomain: "wafy-entrance-tracker.firebaseapp.com",
-  projectId: "wafy-entrance-tracker",
-  storageBucket: "wafy-entrance-tracker.firebasestorage.app",
-  messagingSenderId: "645522627426",
-  appId: "1:645522627426:web:2711be5d20da51bc2faa3b"
+  apiKey: "AIzaSyAJyJJIeYhum5TEYzcWW0Ey6qIOGrwXxl8",
+  authDomain: "entrance-tracker-6f5fc.firebaseapp.com",
+  projectId: "entrance-tracker-6f5fc",
+  storageBucket: "entrance-tracker-6f5fc.firebasestorage.app",
+  messagingSenderId: "1046024859613",
+  appId: "1:1046024859613:web:0c66247bc4e3d702ab1034"
 };
+// 👆👆👆 ----------------------------------------------------------- 👆👆👆
+
 const firebaseConfig = canvasFirebaseConfig || fallbackFirebaseConfig;
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
