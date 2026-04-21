@@ -270,9 +270,11 @@ export default function App() {
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'submissions', activeCollege.id);
       await setDoc(docRef, { ...dataToSave, lastUpdated: new Date().toISOString(), institutionId: activeCollege.id, institutionName: activeCollege.name });
       
+      const currentScore = calculateScore(dataToSave);
       const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
+      
       try {
-        // By strictly using mode: 'no-cors' and text/plain we bypass CORS rules smoothly
+        // Simple POST request without headers/mode to prevent CORS preflight block
         await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -283,7 +285,8 @@ export default function App() {
             data: {
               ...dataToSave,
               institutionId: activeCollege.id,
-              institutionName: activeCollege.name
+              institutionName: activeCollege.name,
+              totalScore: currentScore
             }
           })
         });
@@ -353,11 +356,24 @@ export default function App() {
     if (clearVerifyText !== 'DeLeTe') return;
     setIsClearing(true);
     try {
-      // Loop through all fetched submissions and delete documents one by one
       for (const sub of allSubmissions) {
          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'submissions', sub.id);
          await deleteDoc(docRef);
       }
+
+      const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
+      try {
+        await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'DELETE_ALL' })
+        });
+        console.log("Sent clear command to Google Sheets");
+      } catch (sheetError) {
+        console.error("Error sending clear command to sheets:", sheetError);
+      }
+
       setAllSubmissions([]);
       setShowClearModal(false);
       setClearVerifyText('');
@@ -469,7 +485,7 @@ export default function App() {
               )}
 
               <button type="submit" className={`w-full text-white text-lg font-bold py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-3 hover:-translate-y-0.5 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
-                <LogIn className="w-6 h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
+                <LogIn className="w-6 h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗLogin' : 'അഡ്മിൻ ലോഗിൻ'}
               </button>
             </form>
           </div>
