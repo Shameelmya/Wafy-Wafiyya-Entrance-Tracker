@@ -4,11 +4,11 @@ import {
   Award, LogIn, CheckCircle2, Save, LogOut, Loader2, Plus, Trash2, Calendar, 
   KeyRound, CloudLightning, Search, ChevronDown, BarChart3, Trophy, AlertTriangle, 
   TrendingUp, Activity, FileText, Lightbulb, MessageSquare, Video, Headset, MapPin,
-  Printer, AlertOctagon, X
+  Printer, AlertOctagon, X, Eye, EyeOff
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Institution Data ---
 export const COLLEGES = [
@@ -78,7 +78,6 @@ const calculateScore = (data) => {
   if (!data) return 0;
   let score = 0;
 
-  // 1. One-time Actions
   if (data.q1_committee_formed === 'Yes') score += 10;
   if (data.q4_help_desk_formed === 'Yes') score += 10;
   if (data.q3_has_youtube) score += 5;
@@ -90,7 +89,6 @@ const calculateScore = (data) => {
   if (data.q16_call_team_ready === 'Yes') score += 10;
   if (data.q17_video_brochure === 'Yes') score += 10;
 
-  // 2. Variable Actions
   const validMeetings = (data.q5_meetings || []).filter(m => m.date).length;
   score += Math.min(validMeetings, 6) * 10;
 
@@ -131,13 +129,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : "wafy-entrance-tracker";
 
-// --- Empty Form State ---
+// --- Empty Form State (All sliders default to 0) ---
 const initialFormState = {
   q1_committee_formed: '', q2_chairman: '', q2_convener: '', q2_member1: '', q2_member2: '', q2_member3: '',
   q4_help_desk_formed: '', q4_contact_numbers: [''],
   q3_instagram: '', q3_facebook: '', q3_has_youtube: false, q3_youtube_links: [''], q3_has_twitter: false, q3_twitter_links: [''], q3_has_linkedin: false, q3_linkedin_links: [''], q3_has_others: false, q3_other_links: [''],
   q5_meetings: [{ date: '', participants: '' }], q6_data_collected: '', q6_followed_up: '', q7_door_to_door: '', q7_houses_covered: '',
-  q8_orbit_participation: 50, q9_orbit_absentees_followed: '', q9_orbit_absentees_details: '', q10_management_rating: 5, q11_teachers_rating: 5, q12_other_events_count: '', q12_other_events_links: [''],
+  q8_orbit_participation: 0, q9_orbit_absentees_followed: '', q9_orbit_absentees_details: '', q10_management_rating: 0, q11_teachers_rating: 0, q12_other_events_count: '', q12_other_events_links: [''],
   q13_student_motivation_formed: '', q13_student_motivation: '', q14_social_media_posts: [''], q15_referral_count: '',
   q16_call_team_ready: '', q16_call_team_count: '', q17_video_brochure: '', q17_video_links: [''], q18_expected_support: '', q19_future_plans: ['']
 };
@@ -155,7 +153,8 @@ export default function App() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [allSubmissions, setAllSubmissions] = useState([]); 
   
-  // Auto Save States
+  // Settings & Toggles
+  const [showRanks, setShowRanks] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
   const isFirstLoad = useRef(true);
   const lastSavedData = useRef(null);
@@ -165,6 +164,7 @@ export default function App() {
   const [clearVerifyText, setClearVerifyText] = useState('');
   const [isClearing, setIsClearing] = useState(false);
 
+  // Initialize Auth & Settings Listener
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -181,6 +181,25 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
+
+  // Listen to Global Config for Ranks visibility
+  useEffect(() => {
+    if (!user) return;
+    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'settings');
+    const unsubscribeConfig = onSnapshot(configRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setShowRanks(docSnap.data().showRanks === true);
+      } else {
+        setShowRanks(false);
+      }
+    });
+    return () => unsubscribeConfig();
+  }, [user]);
+
+  const toggleShowRanks = async () => {
+    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'settings');
+    await setDoc(configRef, { showRanks: !showRanks }, { merge: true });
+  };
 
   const fetchAllSubmissions = async () => {
     if (!user) return;
@@ -239,6 +258,7 @@ export default function App() {
              loadedData.q5_meetings = loadedData.q5_meetings.map(d => ({ date: d, participants: '' }));
           }
 
+          // Merge loaded data with initial to keep 0 defaults if missing
           const finalData = { ...initialFormState, ...loadedData };
           setFormData(finalData);
           lastSavedData.current = JSON.stringify(finalData);
@@ -274,7 +294,6 @@ export default function App() {
       const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
       
       try {
-        // Simple POST request without headers/mode to prevent CORS preflight block
         await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -290,7 +309,6 @@ export default function App() {
             }
           })
         });
-        console.log("Request sent to Google Sheets successfully.");
       } catch (sheetError) { 
         console.error("Google Sheets fetch error:", sheetError); 
       }
@@ -369,7 +387,6 @@ export default function App() {
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ action: 'DELETE_ALL' })
         });
-        console.log("Sent clear command to Google Sheets");
       } catch (sheetError) {
         console.error("Error sending clear command to sheets:", sheetError);
       }
@@ -485,7 +502,7 @@ export default function App() {
               )}
 
               <button type="submit" className={`w-full text-white text-lg font-bold py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-3 hover:-translate-y-0.5 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
-                <LogIn className="w-6 h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗLogin' : 'അഡ്മിൻ ലോഗിൻ'}
+                <LogIn className="w-6 h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
               </button>
             </form>
           </div>
@@ -530,18 +547,44 @@ export default function App() {
 
     return (
       <div className="min-h-screen bg-slate-50 pb-24" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
-        {/* CSS for Printing PDF */}
+        {/* CSS for Printing PDF - Highly Professional Minimal Design */}
         <style>{`
           @media print {
+            @page { size: A4 portrait; margin: 15mm; }
+            body { background-color: white !important; color: #0f172a !important; }
             .no-print { display: none !important; }
-            body { background-color: white !important; }
+            .print-only { display: block !important; }
             main { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+            
+            /* Clean up UI elements for paper */
             .shadow-sm, .shadow-md, .shadow-lg, .shadow-2xl { box-shadow: none !important; }
-            .border { border-color: #e2e8f0 !important; }
-            .print-break-inside-avoid { page-break-inside: avoid; }
-            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            .border { border-color: #cbd5e1 !important; border-width: 1px !important; }
+            .rounded-2xl, .rounded-xl { border-radius: 6px !important; }
+            .bg-slate-50, .bg-white, .bg-emerald-50, .bg-blue-50, .bg-red-50, .bg-amber-50, .bg-sky-50 { background-color: white !important; }
+            
+            /* Typography & Colors */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+            
+            /* Layout Adjustments */
+            .print-break-inside-avoid { page-break-inside: avoid !important; break-inside: avoid !important; }
+            .print-break-before { page-break-before: always !important; break-before: page !important; }
+            .print-grid-4 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 12px !important; }
+            .print-grid-3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 16px !important; align-items: start !important; }
+            .print-grid-2 { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; align-items: start !important; }
+            
+            /* Fix Scrolling Areas */
             .h-[500px] { height: auto !important; max-height: none !important; overflow: visible !important; }
-            .overflow-y-auto { overflow: visible !important; }
+            .overflow-y-auto, .overflow-x-auto { overflow: visible !important; }
+            
+            /* Table formatting - Clean & Minimal */
+            table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+            th { background-color: transparent !important; color: #0f172a !important; border-bottom: 2px solid #0f172a !important; padding: 10px 4px !important; font-size: 10pt !important; border-top: none !important; border-left: none !important; border-right: none !important;}
+            td { border-bottom: 1px solid #cbd5e1 !important; padding: 10px 4px !important; font-size: 9pt !important; border-left: none !important; border-right: none !important;}
+            thead { display: table-header-group !important; }
+            tr { page-break-inside: avoid !important; }
+          }
+          @media screen {
+            .print-only { display: none !important; }
           }
         `}</style>
 
@@ -552,6 +595,16 @@ export default function App() {
               <h1 className="font-bold text-xl">Admin Dashboard & Analytics</h1>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {/* TOGGLE RANKS BUTTON */}
+              <button 
+                onClick={toggleShowRanks} 
+                title="Toggle Ranks visibility for Colleges"
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors ${showRanks ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/50' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600'}`}
+              >
+                {showRanks ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {showRanks ? 'Ranks Visible' : 'Ranks Hidden'}
+              </button>
+
               <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
                 <Printer className="w-4 h-4" /> Print Report
               </button>
@@ -598,9 +651,19 @@ export default function App() {
         )}
 
         <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-          <div className="hidden print-only mb-6 text-center">
-             <h1 className="text-2xl font-extrabold text-slate-900">Wafy Wafiyya Entrance</h1>
-             <p className="text-slate-500 font-semibold">Admission Drive Performance Report</p>
+          {/* Professional Print Header */}
+          <div className="hidden print-only mb-10 border-b-2 border-slate-800 pb-6">
+             <div className="flex justify-between items-end">
+               <div>
+                 <h1 className="text-3xl font-serif font-extrabold text-slate-900 mb-2">Admission Analytics Report</h1>
+                 <p className="text-slate-600 font-bold text-sm uppercase tracking-widest">Wafy Wafiyya - Executive Summary</p>
+               </div>
+               <div className="text-right">
+                 <p className="text-slate-800 font-bold text-sm">Report Taken: {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                 <p className="text-slate-600 font-medium text-sm mt-1">Institutions Evaluated: {submittedCount} / {totalColleges}</p>
+                 <p className="text-slate-400 text-xs mt-1 italic">Confidential Document</p>
+               </div>
+             </div>
           </div>
 
           {isLoadingData ? (
@@ -608,7 +671,8 @@ export default function App() {
           ) : (
             <>
               {/* Detailed Top Stats Grid (8 Cards) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 print-break-inside-avoid">
+              <div className="mb-4 hidden print-only"><h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">Executive Summary & Core Metrics</h2></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 print-break-inside-avoid print-grid-4">
                 <StatCard icon={Target} title="Total Referrals (Adm.)" value={totalReferrals} color="bg-emerald-500" />
                 <StatCard icon={Users} title="Total Data Collected" value={totalStudents} color="bg-blue-500" />
                 <StatCard icon={Building2} title="Colleges Submitted" value={`${submittedCount} / ${totalColleges}`} color="bg-purple-500" />
@@ -621,10 +685,10 @@ export default function App() {
               </div>
 
               {/* Line Graph: Performance Curve */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6 print-break-inside-avoid">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-6 print-break-inside-avoid mt-8">
                  <div className="flex items-center gap-3 mb-6">
-                    <TrendingUp className="w-6 h-6 text-indigo-600" />
-                    <h2 className="font-bold text-slate-800 text-lg">Overall Performance Curve (Rank vs Score)</h2>
+                    <TrendingUp className="w-6 h-6 text-indigo-600 no-print" />
+                    <h2 className="font-bold text-slate-800 text-lg">Performance Distribution Curve</h2>
                  </div>
                  {allSubmissions.length > 0 ? (
                     <PerformanceGraph data={allSubmissions} />
@@ -634,18 +698,18 @@ export default function App() {
               </div>
 
               {/* Ranks & Insights */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-break-inside-avoid">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-break-inside-avoid mt-8 print-grid-3">
                 {/* Toppers */}
                 <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                   <div className="bg-emerald-50 border-b border-emerald-100 p-5 flex items-center gap-3">
-                    <Trophy className="w-6 h-6 text-emerald-600" />
-                    <h2 className="font-bold text-emerald-900 text-lg">Toppers (Top 5)</h2>
+                    <Trophy className="w-6 h-6 text-emerald-600 no-print" />
+                    <h2 className="font-bold text-emerald-900 text-lg">Top Performing Institutions</h2>
                   </div>
                   <div className="p-0 flex-1">
                     {top5.length ? top5.map((college, i) => (
                       <div key={college.id} className="flex justify-between items-center p-4 border-b border-slate-100 hover:bg-slate-50">
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-700' : i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-600'}`}>
+                          <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' : i === 1 ? 'bg-slate-200 text-slate-700' : i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
                             {i + 1}
                           </span>
                           <div>
@@ -664,8 +728,8 @@ export default function App() {
                 {/* Core Metrics */}
                 <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                   <div className="bg-blue-50 border-b border-blue-100 p-5 flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-blue-600" />
-                    <h2 className="font-bold text-blue-900 text-lg">Action Completion Rates</h2>
+                    <Activity className="w-6 h-6 text-blue-600 no-print" />
+                    <h2 className="font-bold text-blue-900 text-lg">Strategic Initiative Adoption</h2>
                   </div>
                   <div className="p-6 space-y-6 flex-1">
                     <ProgressBar label="Committee Formed" percentage={percCommittee} color="bg-sky-500" />
@@ -688,8 +752,8 @@ export default function App() {
                 {/* Needs Attention */}
                 <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                   <div className="bg-red-50 border-b border-red-100 p-5 flex items-center gap-3">
-                    <AlertTriangle className="w-6 h-6 text-red-600" />
-                    <h2 className="font-bold text-red-900 text-lg">Needs Attention</h2>
+                    <AlertTriangle className="w-6 h-6 text-red-600 no-print" />
+                    <h2 className="font-bold text-red-900 text-lg">Priority Intervention Required</h2>
                   </div>
                   <div className="p-0 flex-1">
                      {bottom5.length ? bottom5.map((college, i) => (
@@ -708,19 +772,19 @@ export default function App() {
               </div>
 
               {/* Suggestions & Plans Sections */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print-break-inside-avoid">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print-break-inside-avoid mt-8 print-grid-2">
                  {/* Future Plans */}
                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
                     <div className="bg-amber-50 border-b border-amber-100 p-5 flex items-center gap-3">
-                      <Lightbulb className="w-6 h-6 text-amber-600" />
-                      <h2 className="font-bold text-amber-900 text-lg">Future Plans Added by Colleges</h2>
-                      <span className="ml-auto bg-amber-200 text-amber-800 py-0.5 px-2 rounded-full text-xs font-bold">{allPlans.length}</span>
+                      <Lightbulb className="w-6 h-6 text-amber-600 no-print" />
+                      <h2 className="font-bold text-amber-900 text-lg">Proposed Strategic Initiatives</h2>
+                      <span className="ml-auto bg-amber-200 text-amber-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allPlans.length}</span>
                     </div>
                     <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
                        {allPlans.length > 0 ? allPlans.map((plan, i) => (
                           <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                             <p className="text-xs font-bold text-amber-600 mb-1">{plan.college}</p>
-                             <p className="text-sm text-slate-700 leading-relaxed">{plan.text}</p>
+                             <p className="text-xs font-bold text-amber-700 mb-1">{plan.college}</p>
+                             <p className="text-sm text-slate-800 leading-relaxed">{plan.text}</p>
                           </div>
                        )) : <p className="text-slate-500 text-sm text-center py-10">No future plans submitted yet.</p>}
                     </div>
@@ -729,50 +793,50 @@ export default function App() {
                  {/* Suggestions/Expected Support */}
                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
                     <div className="bg-sky-50 border-b border-sky-100 p-5 flex items-center gap-3">
-                      <MessageSquare className="w-6 h-6 text-sky-600" />
-                      <h2 className="font-bold text-sky-900 text-lg">Suggestions & Expected Support</h2>
-                      <span className="ml-auto bg-sky-200 text-sky-800 py-0.5 px-2 rounded-full text-xs font-bold">{allSuggestions.length}</span>
+                      <MessageSquare className="w-6 h-6 text-sky-600 no-print" />
+                      <h2 className="font-bold text-sky-900 text-lg">Institutional Feedback & Support Req.</h2>
+                      <span className="ml-auto bg-sky-200 text-sky-800 py-0.5 px-2 rounded-full text-xs font-bold no-print">{allSuggestions.length}</span>
                     </div>
                     <div className="p-5 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
                        {allSuggestions.length > 0 ? allSuggestions.map((sug, i) => (
                           <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                             <p className="text-xs font-bold text-sky-600 mb-1">{sug.college}</p>
-                             <p className="text-sm text-slate-700 leading-relaxed">{sug.text}</p>
+                             <p className="text-xs font-bold text-sky-700 mb-1">{sug.college}</p>
+                             <p className="text-sm text-slate-800 leading-relaxed">{sug.text}</p>
                           </div>
                        )) : <p className="text-slate-500 text-sm text-center py-10">No suggestions submitted yet.</p>}
                     </div>
                  </div>
               </div>
 
-              {/* Full College Table */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-break-inside-avoid">
+              {/* Full College Table - Minimal Print Design */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-break-before mt-8">
                  <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                    <h2 className="font-bold text-slate-800 text-lg">All Colleges Detailed Performance</h2>
+                    <h2 className="font-bold text-slate-800 text-lg">Institutional Performance Matrix</h2>
                  </div>
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                 <div className="overflow-x-auto p-4">
+                    <table className="w-full text-left border-collapse print-table">
                        <thead>
-                          <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                             <th className="p-4 font-bold">Rank</th>
-                             <th className="p-4 font-bold">Institution</th>
-                             <th className="p-4 font-bold text-right">Total Score</th>
-                             <th className="p-4 font-bold text-right">Referrals</th>
-                             <th className="p-4 font-bold text-right">Data Col.</th>
-                             <th className="p-4 font-bold text-right">Orbit %</th>
-                             <th className="p-4 font-bold text-center">Help Desk</th>
+                          <tr className="border-b-2 border-slate-800 text-slate-600 text-xs uppercase tracking-widest">
+                             <th className="py-3 px-2 font-bold">Rank</th>
+                             <th className="py-3 px-2 font-bold">Institution</th>
+                             <th className="py-3 px-2 font-bold text-right">Total Score</th>
+                             <th className="py-3 px-2 font-bold text-right">Referrals</th>
+                             <th className="py-3 px-2 font-bold text-right">Data Col.</th>
+                             <th className="py-3 px-2 font-bold text-right">Orbit %</th>
+                             <th className="py-3 px-2 font-bold text-center">Help Desk</th>
                           </tr>
                        </thead>
                        <tbody className="text-sm">
                           {allSubmissions.map((c) => (
-                             <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
-                                <td className="p-4 font-bold text-slate-700">#{c.rank}</td>
-                                <td className="p-4 font-bold text-slate-800 max-w-[250px] truncate" title={c.institutionName}>{c.institutionName}</td>
-                                <td className="p-4 font-bold text-teal-600 text-right">{c.score}</td>
-                                <td className="p-4 font-medium text-slate-600 text-right">{c.q15_referral_count || 0}</td>
-                                <td className="p-4 font-medium text-slate-600 text-right">{c.q6_data_collected || 0}</td>
-                                <td className="p-4 font-medium text-slate-600 text-right">{c.q8_orbit_participation || 0}%</td>
-                                <td className="p-4 text-center">
-                                  {c.q4_help_desk_formed === 'Yes' ? <span className="text-emerald-500 font-bold">✓</span> : <span className="text-red-400 font-bold">✗</span>}
+                             <tr key={c.id} className="border-b border-slate-200 hover:bg-slate-50">
+                                <td className="py-3 px-2 font-bold text-slate-700">#{c.rank}</td>
+                                <td className="py-3 px-2 font-bold text-slate-800 max-w-[250px] truncate" title={c.institutionName}>{c.institutionName}</td>
+                                <td className="py-3 px-2 font-bold text-indigo-600 text-right">{c.score}</td>
+                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q15_referral_count || 0}</td>
+                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q6_data_collected || 0}</td>
+                                <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q8_orbit_participation || 0}%</td>
+                                <td className="py-3 px-2 text-center">
+                                  {c.q4_help_desk_formed === 'Yes' ? <span className="text-emerald-600 font-bold">Yes</span> : <span className="text-slate-400 font-bold">-</span>}
                                 </td>
                              </tr>
                           ))}
@@ -795,7 +859,7 @@ export default function App() {
       const found = allSubmissions.find(d => d.id === activeCollege.id);
       if (found) myRank = found.rank;
   }
-  const showWarning = myRank && totalRanked > 3 && (myRank > totalRanked * 0.6);
+  const isRankLow = myRank && totalRanked > 3 && (myRank > totalRanked * 0.6);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
@@ -830,27 +894,27 @@ export default function App() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         
-        {/* Dynamic Performance Banner */}
-        {!isLoadingData && myRank && (
-          <div className={`mb-8 p-5 rounded-2xl border ${showWarning ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'} shadow-sm flex flex-col md:flex-row items-center justify-between gap-4`}>
+        {/* Dynamic Performance Banner - Controlled by Admin showRanks toggle */}
+        {(!isLoadingData && myRank && showRanks) && (
+          <div className={`mb-8 p-5 rounded-2xl border ${isRankLow ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'} shadow-sm flex flex-col md:flex-row items-center justify-between gap-4`}>
              <div className="flex items-center gap-4">
-               <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${showWarning ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+               <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${isRankLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
                  <Trophy className="w-7 h-7" />
                </div>
                <div>
-                 <h3 className={`text-sm font-bold uppercase tracking-wider ${showWarning ? 'text-red-800' : 'text-emerald-800'}`}>നിങ്ങളുടെ നിലവിലെ റാങ്ക്</h3>
-                 <p className={`text-3xl font-extrabold ${showWarning ? 'text-red-600' : 'text-emerald-600'}`}>
+                 <h3 className={`text-sm font-bold uppercase tracking-wider ${isRankLow ? 'text-red-800' : 'text-emerald-800'}`}>നിങ്ങളുടെ നിലവിലെ റാങ്ക്</h3>
+                 <p className={`text-3xl font-extrabold ${isRankLow ? 'text-red-600' : 'text-emerald-600'}`}>
                    {myRank} <span className="text-lg font-medium opacity-70">/ {COLLEGES.length}</span>
                  </p>
                </div>
              </div>
-             {showWarning && (
+             {isRankLow && (
                 <div className="bg-white/80 p-3 rounded-xl flex-1 border border-red-100 text-red-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p>ശ്രദ്ധിക്കുക: നിങ്ങളുടെ സ്ഥാപനത്തിന്റെ പ്രകടനം നിലവിൽ പിന്നിലാണ്. കൂടുതൽ അഡ്മിഷനുകൾക്കും (Referrals) ഡാറ്റാ ശേഖരണത്തിനും ശ്രദ്ധ നൽകുക! നിങ്ങളുടെ റാങ്ക് ഉയർത്താം.</p>
                 </div>
              )}
-             {!showWarning && (
+             {!isRankLow && (
                 <div className="bg-white/80 p-3 rounded-xl flex-1 border border-emerald-100 text-emerald-800 text-sm font-semibold leading-relaxed flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p>അഭിനന്ദനങ്ങൾ! നിങ്ങളുടെ അഡ്മിഷൻ പ്രവർത്തനങ്ങൾ മികച്ച രീതിയിൽ പുരോഗമിക്കുന്നു. ഈ നിലവാരം തുടരുക.</p>
@@ -1161,16 +1225,16 @@ export default function App() {
                   </label>
                   <div className="relative py-4">
                     <input 
-                      type="range" min="1" max="10" 
+                      type="range" min="0" max="10" 
                       name="q10_management_rating"
                       value={formData.q10_management_rating}
                       onChange={handleChange}
                       className="custom-slider"
-                      style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${(formData.q10_management_rating - 1) * 11.11}%, #d8b4fe ${(formData.q10_management_rating - 1) * 11.11}%, #d8b4fe 100%)` }}
+                      style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${formData.q10_management_rating * 10}%, #d8b4fe ${formData.q10_management_rating * 10}%, #d8b4fe 100%)` }}
                     />
                   </div>
                   <div className="flex justify-between text-sm text-emerald-600/80 mt-1 font-semibold">
-                    <span>1 (Very Low)</span><span>10 (Perfect)</span>
+                    <span>0 (None)</span><span>10 (Perfect)</span>
                   </div>
                 </div>
 
@@ -1180,16 +1244,16 @@ export default function App() {
                   </label>
                   <div className="relative py-4">
                     <input 
-                      type="range" min="1" max="10" 
+                      type="range" min="0" max="10" 
                       name="q11_teachers_rating"
                       value={formData.q11_teachers_rating}
                       onChange={handleChange}
                       className="custom-slider"
-                      style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${(formData.q11_teachers_rating - 1) * 11.11}%, #d8b4fe ${(formData.q11_teachers_rating - 1) * 11.11}%, #d8b4fe 100%)` }}
+                      style={{ background: `linear-gradient(to right, #7c3aed 0%, #7c3aed ${formData.q11_teachers_rating * 10}%, #d8b4fe ${formData.q11_teachers_rating * 10}%, #d8b4fe 100%)` }}
                     />
                   </div>
                   <div className="flex justify-between text-sm text-emerald-600/80 mt-1 font-semibold">
-                    <span>1 (Very Low)</span><span>10 (Perfect)</span>
+                    <span>0 (None)</span><span>10 (Perfect)</span>
                   </div>
                 </div>
               </div>
@@ -1306,10 +1370,17 @@ function PerformanceGraph({ data }) {
      return `${x},${y}`;
   }).join(' ');
 
+  // Professional Grid lines for graph
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(pct => {
+      const y = h - (pct * h);
+      return <line key={pct} x1="0" y1={y} x2={w} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4" />
+  });
+
   return (
     <div className="w-full overflow-x-auto pb-4">
       <div className="min-w-[500px]">
         <svg viewBox={`-10 -10 ${w + 20} ${h + 20}`} className="w-full h-48 overflow-visible">
+          {gridLines}
           <polyline points={points} fill="none" stroke="#4f46e5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           {data.map((d, i) => {
              const x = data.length > 1 ? (i / (data.length - 1)) * w : w/2;
@@ -1334,7 +1405,7 @@ function PerformanceGraph({ data }) {
 function StatCard({ icon: Icon, title, value, subText, color }) {
   return (
     <div className="bg-white p-5 lg:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-      <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${color} shadow-lg shadow-slate-200`}>
+      <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${color} shadow-lg shadow-slate-200 no-print`}>
         <Icon className="w-6 h-6 lg:w-7 lg:h-7" />
       </div>
       <div>
