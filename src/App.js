@@ -1687,7 +1687,7 @@ function AppFooter() {
   return (
     <div className="w-full text-center py-6 mt-auto no-print">
       <p className="text-sm font-medium text-slate-500">
-        &copy; {new Date().getFullYear()} Wafy Alumni Association. 
+        &copy; {new Date().getFullYear()} CIC Entrance Board Admission Drive 2026. 
         <span className="block sm:inline sm:ml-1">
           Designed by <a href={`https://wa.me/917559865389?text=${waText}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:text-indigo-800 hover:underline font-bold transition-colors">Dot Projects</a>
         </span>
