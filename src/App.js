@@ -155,7 +155,7 @@ export default function App() {
   
   // Settings & Toggles
   const [showRanks, setShowRanks] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [saveStatus, setSaveStatus] = useState('');
   const isFirstLoad = useRef(true);
   const lastSavedData = useRef(null);
 
@@ -276,52 +276,7 @@ export default function App() {
     loadInstitutionData();
   }, [user, activeCollege, view]);
 
-  useEffect(() => {
-    if (isFirstLoad.current || view !== 'college' || !activeCollege || !user) return;
-    const currentDataStr = JSON.stringify(formData);
-    if (currentDataStr === lastSavedData.current) return;
-    const timer = setTimeout(() => { autoSaveData(formData); }, 2000);
-    return () => clearTimeout(timer);
-  }, [formData, activeCollege, user, view]);
-
-  const autoSaveData = async (dataToSave) => {
-    setAutoSaveStatus('Saving...');
-    try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'submissions', activeCollege.id);
-      await setDoc(docRef, { ...dataToSave, lastUpdated: new Date().toISOString(), institutionId: activeCollege.id, institutionName: activeCollege.name });
-      
-      const currentScore = calculateScore(dataToSave);
-      const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
-      
-      try {
-        await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'text/plain'
-          },
-          body: JSON.stringify({
-            data: {
-              ...dataToSave,
-              institutionId: activeCollege.id,
-              institutionName: activeCollege.name,
-              totalScore: currentScore
-            }
-          })
-        });
-      } catch (sheetError) { 
-        console.error("Google Sheets fetch error:", sheetError); 
-      }
-
-      lastSavedData.current = JSON.stringify(dataToSave);
-      setAutoSaveStatus('Auto-saved');
-      fetchAllSubmissions(); 
-      setTimeout(() => { setAutoSaveStatus(''); }, 3000);
-    } catch (error) {
-      console.error("Auto-save error:", error);
-      setAutoSaveStatus('Save Failed!');
-    }
-  };
+  // REMOVED AUTO-SAVE `useEffect` HERE
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -357,16 +312,57 @@ export default function App() {
     setFormData(initialFormState);
     setSelectedIdInput('');
     setPasskeyInput('');
-    setAutoSaveStatus('');
+    setSaveStatus('');
     setView('login');
   };
 
+  // MANUAL SAVE ONLY
   const handleManualSave = async (e) => {
     e.preventDefault();
     if (!user || !activeCollege) return;
     setIsSaving(true);
-    await autoSaveData(formData);
+    setSaveStatus('Saving...');
+
+    try {
+      // 1. Save to Firebase
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'submissions', activeCollege.id);
+      await setDoc(docRef, { ...formData, lastUpdated: new Date().toISOString(), institutionId: activeCollege.id, institutionName: activeCollege.name });
+      
+      // 2. Save to Google Sheets
+      const currentScore = calculateScore(formData);
+      const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxyEpkyf1dXXteMdM735fBC9KK_bO26hQRej5YKG3OwqQO0KKyIisuj8rr-m8Caqra1/exec';
+      
+      try {
+        await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: JSON.stringify({
+            data: {
+              ...formData,
+              institutionId: activeCollege.id,
+              institutionName: activeCollege.name,
+              totalScore: currentScore
+            }
+          })
+        });
+        console.log("Request sent to Google Sheets successfully.");
+      } catch (sheetError) { 
+        console.error("Google Sheets fetch error:", sheetError); 
+      }
+
+      lastSavedData.current = JSON.stringify(formData);
+      setSaveStatus('Saved Successfully');
+      fetchAllSubmissions(); 
+    } catch (error) {
+      console.error("Save error:", error);
+      setSaveStatus('Save Failed!');
+    }
+
     setIsSaving(false);
+    setTimeout(() => { setSaveStatus(''); }, 3000);
   };
 
   // Admin Clear All Data Handler
@@ -387,6 +383,7 @@ export default function App() {
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ action: 'DELETE_ALL' })
         });
+        console.log("Sent clear command to Google Sheets");
       } catch (sheetError) {
         console.error("Error sending clear command to sheets:", sheetError);
       }
@@ -879,10 +876,10 @@ export default function App() {
             <h1 className="font-bold text-xl sm:hidden">Drive Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            {autoSaveStatus && (
+            {saveStatus && (
                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-black/20 rounded-full text-sm font-semibold">
-                 {autoSaveStatus === 'Saving...' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudLightning className="w-4 h-4 text-yellow-300" />}
-                 {autoSaveStatus}
+                 {saveStatus === 'Saving...' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudLightning className="w-4 h-4 text-yellow-300" />}
+                 {saveStatus}
                </div>
             )}
             <button onClick={handleLogout} className="text-teal-50 hover:text-white transition-colors flex items-center gap-2 text-base font-semibold bg-white/10 px-4 py-1.5 rounded-full hover:bg-white/20 whitespace-nowrap">
@@ -1326,11 +1323,11 @@ export default function App() {
             {/* Save Button */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky bottom-4 flex flex-col sm:flex-row items-center justify-between gap-5 z-40">
               <div className="text-base text-slate-500 flex-1">
-                {autoSaveStatus === 'Saving...' ? (
+                {saveStatus === 'Saving...' ? (
                   <span className="flex items-center text-slate-600 font-semibold bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 inline-flex">
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Auto Saving...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving Data...
                   </span>
-                ) : autoSaveStatus === 'Auto-saved' || autoSaveStatus === '' ? (
+                ) : saveStatus === 'Saved Successfully' ? (
                   <span className="flex items-center text-green-700 font-bold bg-green-50 px-4 py-2 rounded-xl border border-green-200 inline-flex">
                     <CheckCircle2 className="w-6 h-6 mr-2" /> വിവരങ്ങൾ സുരക്ഷിതമാണ് (Saved)
                   </span>
