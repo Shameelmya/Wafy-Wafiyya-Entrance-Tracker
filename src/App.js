@@ -4,7 +4,7 @@ import {
   Award, LogIn, CheckCircle2, Save, LogOut, Loader2, Plus, Trash2, Calendar, 
   KeyRound, CloudLightning, Search, ChevronDown, BarChart3, Trophy, AlertTriangle, 
   TrendingUp, Activity, FileText, Lightbulb, MessageSquare, Video, Headset, MapPin,
-  Printer, AlertOctagon, X, Eye, EyeOff
+  Printer, AlertOctagon, X, Eye, EyeOff, Calculator, Info, ListChecks
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -12,65 +12,52 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, onSn
 
 // --- Institution Data ---
 export const COLLEGES = [
-  { id: "c01", passkey: "HJI8X", name: "HUJJATHUL ISLAM WAFY COLLEGE" },
-  { id: "c02", passkey: "PMS7Y", name: "PMSA POOKOYA THANGAL ISLAMIC & ARTS COLLEGE" },
-  { id: "c03", passkey: "BFK3M", name: "BAFAKHY ISLAMIC & ARTS COLLEGE" },
-  { id: "c04", passkey: "FLH4A", name: "FALAHIYA ISLAMIC ARABIC COLLEGE" },
-  { id: "c05", passkey: "UST2P", name: "UMERALI SHIHAB THANGAL ISLAMIC ACADEMY" },
-  { id: "c06", passkey: "ASH9R", name: "ASSHUHADA ISLAMIC DAWA COLLEGE" },
-  { id: "c07", passkey: "MTM5E", name: "MTM ISLAMIC & ARTS COLLEGE" },
-  { id: "c08", passkey: "SWH6C", name: "SWAHABA ISLAMIC ACADEMY" },
-  { id: "c09", passkey: "RHM1N", name: "RAHMANIYA ISLAMIC & ARTS COLLEGE" },
-  { id: "c10", passkey: "MDR8L", name: "MADARJUSSUNNA ISLAMIC COLLEGE" },
-  { id: "c11", passkey: "VRK3W", name: "VARAKKAL MULLAKOVA THANGAL COLLEGE" },
-  { id: "c12", passkey: "SUM9D", name: "SHAMSUL ULAMA MEMORIAL SALIHEEN WAFY COLLEGE" },
-  { id: "c13", passkey: "KHM4Q", name: "KKHM ISLAMIC & ARTS COLLEGE" },
-  { id: "c14", passkey: "RSH2Z", name: "RASHEEDIYYA ISLAMIC & ARTS COLLEGE" },
-  { id: "c15", passkey: "MJM7V", name: "MAJMAA SHAREE-ATH & ARTS COLLEGE" },
-  { id: "c16", passkey: "DUL6T", name: "DARUL ULOOM ISLAMIC & ARTS COLLEGE" },
-  { id: "c17", passkey: "DSL5K", name: "DARUSSALAM ISLAMIC & ARTS COLLEGE" },
-  { id: "c18", passkey: "DHI8B", name: "DARUL IHSAN ISLAMIC ACADEMY" },
-  { id: "c19", passkey: "MJL3F", name: "MAJLIS UMARIYYA ISLAMIC & ARTS COLLEGE" },
-  { id: "c20", passkey: "SHT9G", name: "SHIHAB THANGAL ISLAMIC & ARTS COLLEGE" },
-  { id: "c21", passkey: "SHU4J", name: "SHAMSUL HUDA ISLAMIC ACADEMY" },
-  { id: "c22", passkey: "MNR1X", name: "MUNEERUL ISLAM ARABIC (WAFY) COLLEGE" },
-  { id: "c23", passkey: "DAF6Y", name: "DARUL ATHFAL WAFY ARTS COLLEGE" },
-  { id: "c24", passkey: "PAK2M", name: "PANGIL AHMED KUTTY MUSLIYAR WAFY COLLEGE" },
-  { id: "c25", passkey: "NMI7A", name: "NAFEESATHUL MISRIYA INSTITUTE OF INNOVATIVE STUDIES" },
-  { id: "c26", passkey: "ESC9P", name: "ESCOLA INTERNATIONAL" },
-  { id: "c27", passkey: "VAM5R", name: "VAM ISLAMIC & ARTS COLLEGE FOR GIRLS" },
-  { id: "c28", passkey: "HST3E", name: "HYDERALI SHIHAB THANGAL COLLEGE FOR WOMEN (WAFIYYA)" },
-  { id: "c29", passkey: "FZW8C", name: "FATHIMA ZAHRA WOMEN'S COLLEGE" },
-  { id: "c30", passkey: "WIA4N", name: "WOMEN'S ISLAMIC & ARTS COLLEGE" },
-  { id: "c31", passkey: "ESC1L", name: "ELITE SHE CAMPUS WAFIYYA ARTS COLLEGE" },
-  { id: "c32", passkey: "PTM6W", name: "PTM ARTS & SCIENCE COLLEGE FOR GIRLS (WAFIYYA)" },
-  { id: "c33", passkey: "LOR2D", name: "LORE ACADEMY DAY COLLEGE FOR WOMEN" },
-  { id: "c34", passkey: "SPL9Q", name: "SOULPATH COLLEGE FOR ADVANCED STUDIES (WAFIYYA)" },
-  { id: "c35", passkey: "HVW5Z", name: "HOPE VALLEY WOMEN'S COLLEGE (WAFIYYA)" },
-  { id: "c36", passkey: "MTW7V", name: "MTM WOMEN'S COLLEGE" },
-  { id: "c37", passkey: "STE3T", name: "SHIHAB THANGAL EDUCATIONAL ACADEMY" },
-  { id: "c38", passkey: "WMB8K", name: "WADEEMA MOHAMED BUTTI WOMEN'S COLLEGE" },
-  { id: "c39", passkey: "WMO4B", name: "WMO WOMEN'S COLLEGE (WAFIYYA)" },
-  { id: "c40", passkey: "VMH2F", name: "VAYALIL MOYI HAJI MEMORIAL ISLAMIC & ARTS COLLEGE FOR WOMEN" },
-  { id: "c41", passkey: "CMA6G", name: "CM AYISHA HAJJUMMA INSTITUTE OF ADVANCED STUDIES (WAFIYYA)" },
-  { id: "c42", passkey: "CMM1J", name: "CHELAKKAD MUHAMMED MUSLIYAR ISLAMIC ARTS COLLEGE FOR GIRLS" },
-  { id: "c43", passkey: "ALG9X", name: "AL GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS" },
-  { id: "c44", passkey: "BFW5Y", name: "BAFAKHY WAFIYYA COLLEGE" },
-  { id: "c45", passkey: "AFW3M", name: "AL FAROOQ ISLAMIC WOMEN'S COLLEGE" },
-  { id: "c46", passkey: "DAW8A", name: "DARULATHFAL ISLAMIC & ARTS COLLEGE FOR WOMEN" },
-  { id: "c47", passkey: "SMS4P", name: "SAYYID MUHAMMEDALI SHIHAB THANGAL ISLAMIC & ARTS WOMEN'S COLLEGE" },
-  { id: "c48", passkey: "BKC7R", name: "BEEVI KHADEEJA (R) ISLAMIC & ARTS WOMEN'S COLLEGE" },
-  { id: "c49", passkey: "QIS5K", name: "QUVATHUL ISLAM WAFY COLLEGE" },
-  { id: "c50", passkey: "BST2N", name: "BUSTHANABAD WAFY COLLEGE" },
-  { id: "c51", passkey: "JMC8W", name: "JAMIA ISLAMIYA WAFY COLLEGE" },
-  { id: "c52", passkey: "KIC4Y", name: "KIC WAFY COLLEGE" },
-  { id: "c53", passkey: "MIC9B", name: "MIC WAFY COLLEGE" },
-  { id: "c54", passkey: "MLB7V", name: "MALABAR WAFY COLLEGE" },
-  { id: "c55", passkey: "DNR3X", name: "DARUNNUJOOM WAFY COLLEGE" },
-  { id: "c56", passkey: "AHW6M", name: "AL HIDAYA WAFIYYA COLLEGE" },
-  { id: "c57", passkey: "BUC1P", name: "BUSTHANUL ULOOM WAFY COLLEGE" },
-  { id: "c58", passkey: "HIW4A", name: "HIDAYATHUL ISLAM WAFY COLLEGE" },
-  { id: "c59", passkey: "SHW8Z", name: "SIRAJUL HUDA WAFY COLLEGE" }
+  { id: "c1", passkey: "KHM4Q", name: "1 - KKHM ISLAMIC & ARTS COLLEGE" },
+  { id: "c2", passkey: "RSH2Z", name: "2 - RASHEEDIYYA ISLAMIC & ARTS COLLEGE" },
+  { id: "c4", passkey: "MJM7V", name: "4 - MAJMA'A SHAREE-ATH & ARTS COLLEGE" },
+  { id: "c11", passkey: "PMS7Y", name: "11 - PMSA POOKOYA THANGAL ISLAMIC & ARTS COLLEGE" },
+  { id: "c17", passkey: "DUL6T", name: "17 - DARUL ULOOM ISLAMIC & ARTS COLLEGE" },
+  { id: "c21", passkey: "BFK3M", name: "21 - BAFAKHY ISLAMIC& ARTS COLLEGE" },
+  { id: "c30", passkey: "ALG9X", name: "30 - AL GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS" },
+  { id: "c32", passkey: "ASH9R", name: "32 - ASSHUHADA ISLAMIC DA'WA COLLEGE" },
+  { id: "c33", passkey: "DSL5K", name: "33 - DARUSSALAM ISLAMIC & ARTS COLLEGE" },
+  { id: "c34", passkey: "NMK8B", name: "34 - NATTUKAL MAKHAM ISLAMIC & ARTS COLLEGE" },
+  { id: "c35", passkey: "MTM5E", name: "35 - MTM ISLAMIC & ARTS COLLEGE" },
+  { id: "c38", passkey: "MTW7V", name: "38 - MTM WOMEN’S COLLEGE" },
+  { id: "c47", passkey: "MQD4C", name: "47 - MAQDOOMIYYA COLLEGE FOR ISLAMIC STUDIES (MIC)" },
+  { id: "c48", passkey: "BFW5Y", name: "48 - BAFAKHY WAFIYYA COLLEGE" },
+  { id: "c51", passkey: "DHI8B", name: "51 - DARUL IHSAN ISLAMIC ACADEMY" },
+  { id: "c54", passkey: "UST2P", name: "54 - UMERALI SHIHAB THANGAL ISLAMIC ACADEMY" },
+  { id: "c58", passkey: "WMO4B", name: "58 - WMO WOMEN'S COLLEGE (WAFIYYA)" },
+  { id: "c59", passkey: "SHU4J", name: "59 - SHAMSUL HUDA ISLAMIC ACADEMY" },
+  { id: "c60", passkey: "BKC7R", name: "60 - BEEVI KHADEEJA (R) ISLAMIC & ARTS WOMEN`S COLLEGE" },
+  { id: "c72", passkey: "SMS4P", name: "72 - SAYYID MUHAMMEDALI SHIHAB THANGAL ISLAMIC & ARTS WOMEN’S COLLEGE" },
+  { id: "c76", passkey: "MJL3F", name: "76 - MAJLIS UMARIYYA ISLAMIC & ARTS COLLEGE" },
+  { id: "c77", passkey: "WFC9L", name: "77 - WAFY CAMPUS" },
+  { id: "c79", passkey: "DAW7M", name: "79 - DARUL ANWAR ISLAMIC & ARTS COLLEGE FOR WOMAN" },
+  { id: "c80", passkey: "AFW3M", name: "80 - AL FAROOQ ISLAMIC WOMEN'S COLLEGE" },
+  { id: "c82", passkey: "VMH2F", name: "82 - VAYALIL MOYI HAJI MEMORIAL ISLAMIC & ARTS COLLEGE FOR WOMEN" },
+  { id: "c85", passkey: "SHT9G", name: "85 - SHIHAB THANGAL ISLAMIC & ARTS COLLEGE" },
+  { id: "c92", passkey: "DAW8A", name: "92 - DARUL ATHFAL ISLAMIC & ARTS COLLEGE FOR WOMEN" },
+  { id: "c95", passkey: "FZW8C", name: "95 - FATHIMA ZAHRA WOMEN’S COLLEGE" },
+  { id: "c98", passkey: "TIW2X", name: "98 - THANVEERUL ISLAM WOMEN'S COLLEGE" },
+  { id: "c101", passkey: "MDR8L", name: "101 - MADARIJUSSUNNA ISLAMIC COLLEGE" },
+  { id: "c106", passkey: "STE3T", name: "106 - SHIHAB THANGAL EDUCATIONAL ACADEMY" },
+  { id: "c107", passkey: "WMB8K", name: "107 - WADEEMA MOHAMED BUTTI WOMEN’S COLLEGE" },
+  { id: "c108", passkey: "MIM4P", name: "108 - MIM WOMEN’S ISLAMIC & ARTS COLLEGE" },
+  { id: "c110", passkey: "ABW5K", name: "110 - AL BASMA WOMEN’S COLLEGE" },
+  { id: "c115", passkey: "MDQ9Y", name: "115 - MALIK DEENAR QURAN RESEARCH INSTITUTE - WAFY CAMPUS" },
+  { id: "c117", passkey: "SWH6C", name: "117 - SWAHABA ISLAMIC ACADEMY" },
+  { id: "c119", passkey: "DTA3Z", name: "119 - DARUL TARBIYYAH ISLAMIC ACADEMY" },
+  { id: "c122", passkey: "CMA6G", name: "122 - C.M. AYISHA HAJJUMMA INSTITUTE OF ADVANCED STUDIES (WAFIYYA)" },
+  { id: "c123", passkey: "RHM1N", name: "123 - RAHMANIYA ISLAMIC & ARTS COLLEGE" },
+  { id: "c124", passkey: "VAM5R", name: "124 - VAM ISLAMIC & ARTS COLLEGE FOR GIRLS" },
+  { id: "c126", passkey: "PAK2M", name: "126 - PANGIL AHMED KUTTY MUSLIYAR WAFY COLLEGE" },
+  { id: "c127", passkey: "HJI8X", name: "127 - HUJJATHUL ISLAM WAFY COLLEGE" },
+  { id: "c129", passkey: "DAF6Y", name: "129 - DARUL ATHFAL WAFY ARTS COLLEGE" },
+  { id: "c131", passkey: "VRK3W", name: "131 - VARAKKAL MULLAKOYA THANGAL WAFY COLLEGE" },
+  { id: "c132", passkey: "IAW7Q", name: "132 - IRSHADUL ATHFAL WAFIYYA ARTS COLLEGE" },
+  { id: "c134", passkey: "SUM9D", name: "134 - SHAMSUL ULAMA MEMORIAL SALIHEEN WAFY COLLEGE" }
 ];
 
 // --- Score Calculation Algorithm ---
@@ -111,6 +98,46 @@ const calculateScore = (data) => {
   score += teachers * 2;
 
   return score;
+};
+
+// --- Score Calculation Breakdown ---
+const getScoreBreakdown = (data) => {
+  if (!data) return [];
+  const breakdown = [];
+
+  if (data.q1_committee_formed === 'Yes') breakdown.push({ label: 'Committee Formed', points: 10 });
+  if (data.q4_help_desk_formed === 'Yes') breakdown.push({ label: 'Help Desk Formed', points: 10 });
+  if (data.q3_has_youtube) breakdown.push({ label: 'YouTube Active', points: 5 });
+  if (data.q3_has_twitter) breakdown.push({ label: 'Twitter Active', points: 5 });
+  if (data.q3_has_linkedin) breakdown.push({ label: 'LinkedIn Active', points: 5 });
+  if (data.q3_has_others) breakdown.push({ label: 'Other Social Media', points: 5 });
+  if (data.q7_door_to_door === 'Yes') breakdown.push({ label: 'Door-to-Door Campaign', points: 10 });
+  if (data.q13_student_motivation_formed === 'Yes') breakdown.push({ label: 'Student Motivation', points: 10 });
+  if (data.q16_call_team_ready === 'Yes') breakdown.push({ label: 'Call Team Ready', points: 10 });
+  if (data.q17_video_brochure === 'Yes') breakdown.push({ label: 'Video Brochure', points: 10 });
+
+  const validMeetings = (data.q5_meetings || []).filter(m => m.date).length;
+  if (validMeetings > 0) breakdown.push({ label: `Meetings (${Math.min(validMeetings, 6)} x 10)`, points: Math.min(validMeetings, 6) * 10 });
+
+  const dataCollected = parseInt(data.q6_data_collected) || 0;
+  if (dataCollected > 0) breakdown.push({ label: `Data Collected (${dataCollected} x 2)`, points: dataCollected * 2 });
+
+  const housesCovered = parseInt(data.q7_houses_covered) || 0;
+  if (housesCovered > 0) breakdown.push({ label: `Houses Covered (${housesCovered} x 0.5)`, points: Math.floor(housesCovered * 0.5) });
+
+  const referrals = parseInt(data.q15_referral_count) || 0;
+  if (referrals > 0) breakdown.push({ label: `Referrals (${referrals} x 50)`, points: referrals * 50 });
+
+  const orbit = parseInt(data.q8_orbit_participation) || 0;
+  if (orbit > 0) breakdown.push({ label: `Orbit Participation (${orbit}% x 0.5)`, points: Math.floor(orbit * 0.5) });
+
+  const mgt = parseInt(data.q10_management_rating) || 0;
+  if (mgt > 0) breakdown.push({ label: `Management Rating (${mgt}/10 x 2)`, points: mgt * 2 });
+
+  const teachers = parseInt(data.q11_teachers_rating) || 0;
+  if (teachers > 0) breakdown.push({ label: `Teachers Rating (${teachers}/10 x 2)`, points: teachers * 2 });
+
+  return breakdown;
 };
 
 // --- Firebase Setup ---
@@ -157,6 +184,7 @@ export default function App() {
   // Settings & Toggles
   const [showRanks, setShowRanks] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [validationError, setValidationError] = useState(''); // NEW validation error state
   const isFirstLoad = useRef(true);
   const lastSavedData = useRef(null);
 
@@ -164,6 +192,10 @@ export default function App() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [clearVerifyText, setClearVerifyText] = useState('');
   const [isClearing, setIsClearing] = useState(false);
+
+  // Rank Logic & Details Modal States
+  const [showLogicModal, setShowLogicModal] = useState(false);
+  const [selectedScoreDetails, setSelectedScoreDetails] = useState(null);
 
   // Force Viewport Meta Tag for Mobile Fit (Solves Desktop view on mobile)
   useEffect(() => {
@@ -324,13 +356,74 @@ export default function App() {
     setSelectedIdInput('');
     setPasskeyInput('');
     setSaveStatus('');
+    setValidationError('');
     setView('login');
   };
 
-  // MANUAL SAVE ONLY
+  // VALIDATION HELPER FUNCTION
+  const isValidLink = (str) => {
+    if (!str || str.trim() === '') return true;
+    let urlStr = str.trim();
+    // If protocol is missing, add http:// temporarily just for validation
+    if (!/^https?:\/\//i.test(urlStr)) {
+      urlStr = 'http://' + urlStr;
+    }
+    try {
+      const urlObj = new URL(urlStr);
+      // Must contain a dot to be a valid domain (e.g. instagram.com)
+      return urlObj.hostname.includes('.');
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // MANUAL SAVE WITH URL VALIDATION
   const handleManualSave = async (e) => {
     e.preventDefault();
     if (!user || !activeCollege) return;
+    
+    // Reset any previous validation errors
+    setValidationError('');
+
+    // Field configuration for validation checks
+    const linkFieldsToCheck = [
+      { key: 'q3_instagram', label: 'Instagram' },
+      { key: 'q3_facebook', label: 'Facebook' }
+    ];
+
+    const arrayLinkFieldsToCheck = [
+      { key: 'q3_youtube_links', label: 'YouTube' },
+      { key: 'q3_twitter_links', label: 'Twitter (X)' },
+      { key: 'q3_linkedin_links', label: 'LinkedIn' },
+      { key: 'q3_other_links', label: 'Other platforms' },
+      { key: 'q14_social_media_posts', label: 'Social Media Posts' },
+      { key: 'q12_other_events_links', label: 'Other Events' },
+      { key: 'q17_video_links', label: 'Video Brochures' }
+    ];
+
+    // Check single link fields
+    for (let field of linkFieldsToCheck) {
+      if (formData[field.key] && !isValidLink(formData[field.key])) {
+        setValidationError(`Please enter a valid link for ${field.label} (e.g. instagram.com/mycollege).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+
+    // Check array link fields
+    for (let field of arrayLinkFieldsToCheck) {
+      if (formData[field.key] && formData[field.key].length > 0) {
+        for (let link of formData[field.key]) {
+          if (link && !isValidLink(link)) {
+            setValidationError(`Please enter a valid link in the ${field.label} section.`);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+        }
+      }
+    }
+
+    // If all validations pass, proceed with saving
     setIsSaving(true);
     setSaveStatus('Saving...');
 
@@ -613,6 +706,15 @@ export default function App() {
                   {showRanks ? 'Ranks Visible' : 'Ranks Hidden'}
                 </button>
 
+                {/* SHOW RANK LOGIC BUTTON */}
+                <button 
+                  onClick={() => setShowLogicModal(true)} 
+                  title="View Ranking Logic & Weightages"
+                  className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 border border-indigo-600/50 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors no-print"
+                >
+                  <Calculator className="w-4 h-4" /> Rank Logic
+                </button>
+
                 <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors">
                   <Printer className="w-4 h-4" /> Print Report
                 </button>
@@ -654,6 +756,86 @@ export default function App() {
                    >
                       {isClearing ? <><Loader2 className="w-5 h-5 animate-spin" /> Clearing Data...</> : <><Trash2 className="w-5 h-5" /> Permanently Delete All Data</>}
                    </button>
+               </div>
+            </div>
+          )}
+
+          {/* Rank Logic Modal */}
+          {showLogicModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
+               <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                   <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                      <h3 className="text-xl font-bold text-indigo-900 flex items-center gap-2"><ListChecks className="w-6 h-6 text-indigo-600" /> Ranking Logic & Weightages</h3>
+                      <button onClick={() => setShowLogicModal(false)} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-6 h-6 text-slate-500" /></button>
+                   </div>
+                   <div className="space-y-4 text-slate-700 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <h4 className="font-bold text-slate-900 mb-2">High Impact Metrics</h4>
+                          <ul className="space-y-2">
+                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Referrals (Admissions)</span> <span className="font-bold text-indigo-600">50 pts/student</span></li>
+                          </ul>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <h4 className="font-bold text-slate-900 mb-2">Scale-based Metrics</h4>
+                          <ul className="space-y-2">
+                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Data Collected</span> <span className="font-bold text-indigo-600">2 pts/student</span></li>
+                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Houses Covered</span> <span className="font-bold text-indigo-600">0.5 pts/house</span></li>
+                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Orbit Participation</span> <span className="font-bold text-indigo-600">0.5 pts/%</span></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 className="font-bold text-slate-900 mb-3">Fixed / One-time Activities</h4>
+                        <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Committee Formed</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Help Desk Setup</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Door-to-Door Campaign</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Student Motivation</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Call Team Ready</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Video Brochure</span> <span className="font-bold text-indigo-600">10 pts</span></li>
+                        </ul>
+                      </div>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 className="font-bold text-slate-900 mb-3">Ratings & Social Media</h4>
+                        <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Management Rating</span> <span className="font-bold text-indigo-600">2 pts/point</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Teachers Rating</span> <span className="font-bold text-indigo-600">2 pts/point</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Meetings Held</span> <span className="font-bold text-indigo-600">10 pts/meet (Max 60)</span></li>
+                          <li className="flex justify-between border-b border-slate-200 pb-1"><span>Social Media Activity</span> <span className="font-bold text-indigo-600">5 pts/platform</span></li>
+                        </ul>
+                      </div>
+                   </div>
+               </div>
+            </div>
+          )}
+
+          {/* Score Breakdown Details Modal */}
+          {selectedScoreDetails && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
+               <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+                   <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 leading-tight pr-4">{selectedScoreDetails.institutionName}</h3>
+                        <p className="text-sm font-semibold text-indigo-600 mt-1">Rank #{selectedScoreDetails.rank} &bull; Total Score: {selectedScoreDetails.score}</p>
+                      </div>
+                      <button onClick={() => setSelectedScoreDetails(null)} className="p-1 hover:bg-slate-100 rounded-full flex-shrink-0"><X className="w-5 h-5 text-slate-500" /></button>
+                   </div>
+                   <div className="overflow-y-auto flex-1 pr-2 space-y-2">
+                      {getScoreBreakdown(selectedScoreDetails).map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-50 text-sm">
+                          <span className="text-slate-600 font-medium">{item.label}</span>
+                          <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">+{item.points}</span>
+                        </div>
+                      ))}
+                      {getScoreBreakdown(selectedScoreDetails).length === 0 && (
+                        <p className="text-center text-slate-500 py-4 text-sm">No points scored yet.</p>
+                      )}
+                   </div>
+                   <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center">
+                     <span className="font-extrabold text-slate-900">Total Calculation</span>
+                     <span className="text-xl font-black text-indigo-600">{selectedScoreDetails.score}</span>
+                   </div>
                </div>
             </div>
           )}
@@ -832,6 +1014,7 @@ export default function App() {
                                <th className="py-3 px-2 font-bold text-right">Data Col.</th>
                                <th className="py-3 px-2 font-bold text-right">Orbit %</th>
                                <th className="py-3 px-2 font-bold text-center">Help Desk</th>
+                               <th className="py-3 px-2 font-bold text-center no-print">Details</th>
                             </tr>
                          </thead>
                          <tbody className="text-sm">
@@ -845,6 +1028,14 @@ export default function App() {
                                   <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q8_orbit_participation || 0}%</td>
                                   <td className="py-3 px-2 text-center">
                                     {c.q4_help_desk_formed === 'Yes' ? <span className="text-emerald-600 font-bold">Yes</span> : <span className="text-slate-400 font-bold">-</span>}
+                                  </td>
+                                  <td className="py-3 px-2 text-center no-print">
+                                    <button
+                                      onClick={() => setSelectedScoreDetails(c)}
+                                      className="text-xs bg-slate-100 hover:bg-indigo-50 text-indigo-600 font-bold py-1.5 px-3 rounded-lg border border-slate-200 hover:border-indigo-200 transition-colors flex items-center gap-1 mx-auto"
+                                    >
+                                      <Info className="w-3 h-3" /> View
+                                    </button>
                                   </td>
                                </tr>
                             ))}
@@ -938,6 +1129,17 @@ export default function App() {
           </div>
         ) : (
           <form onSubmit={handleManualSave} className="space-y-6 sm:space-y-10">
+
+            {/* Validation Error Banner */}
+            {validationError && (
+              <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-2xl border bg-red-50 border-red-200 shadow-sm flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-red-800">Validation Error</h3>
+                  <p className="text-sm font-medium text-red-700 mt-1">{validationError}</p>
+                </div>
+              </div>
+            )}
             
             <Section 
               title="സമിതി & ഹെൽപ്പ് ഡെസ്ക്" 
@@ -1002,8 +1204,8 @@ export default function App() {
               headerClasses="bg-teal-50/80 border-b border-teal-100 text-teal-900"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                <TextInput label="Instagram ID/Link" name="q3_instagram" value={formData.q3_instagram} onChange={handleChange} focusClass="focus:ring-teal-500 focus:border-teal-500"/>
-                <TextInput label="Facebook ID/Link" name="q3_facebook" value={formData.q3_facebook} onChange={handleChange} focusClass="focus:ring-teal-500 focus:border-teal-500"/>
+                <TextInput label="Instagram Link" name="q3_instagram" value={formData.q3_instagram} onChange={handleChange} placeholder="instagram.com/..." focusClass="focus:ring-teal-500 focus:border-teal-500"/>
+                <TextInput label="Facebook Link" name="q3_facebook" value={formData.q3_facebook} onChange={handleChange} placeholder="facebook.com/..." focusClass="focus:ring-teal-500 focus:border-teal-500"/>
               </div>
 
               <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-teal-50">
