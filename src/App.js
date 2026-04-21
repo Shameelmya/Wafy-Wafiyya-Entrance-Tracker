@@ -86,7 +86,7 @@ const calculateScore = (data) => {
   score += Math.floor(housesCovered * 0.5);
 
   const referrals = parseInt(data.q15_referral_count) || 0;
-  score += referrals * 50;
+  score += referrals * 25;
 
   const orbit = parseInt(data.q8_orbit_participation) || 0;
   score += Math.floor(orbit * 0.5); 
@@ -126,7 +126,7 @@ const getScoreBreakdown = (data) => {
   if (housesCovered > 0) breakdown.push({ label: `Houses Covered (${housesCovered} x 0.5)`, points: Math.floor(housesCovered * 0.5) });
 
   const referrals = parseInt(data.q15_referral_count) || 0;
-  if (referrals > 0) breakdown.push({ label: `Referrals (${referrals} x 50)`, points: referrals * 50 });
+  if (referrals > 0) breakdown.push({ label: `Referrals (${referrals} x 25)`, points: referrals * 25 });
 
   const orbit = parseInt(data.q8_orbit_participation) || 0;
   if (orbit > 0) breakdown.push({ label: `Orbit Participation (${orbit}% x 0.5)`, points: Math.floor(orbit * 0.5) });
@@ -183,6 +183,9 @@ export default function App() {
   
   // Settings & Toggles
   const [showRanks, setShowRanks] = useState(false);
+  const [manualRankingEnabled, setManualRankingEnabled] = useState(false);
+  const [showManualRankConfirmModal, setShowManualRankConfirmModal] = useState(false);
+  const [pendingManualRankState, setPendingManualRankState] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [validationError, setValidationError] = useState(''); // NEW validation error state
   const isFirstLoad = useRef(true);
@@ -233,8 +236,10 @@ export default function App() {
     const unsubscribeConfig = onSnapshot(configRef, (docSnap) => {
       if (docSnap.exists()) {
         setShowRanks(docSnap.data().showRanks === true);
+        setManualRankingEnabled(docSnap.data().manualRankingEnabled === true);
       } else {
         setShowRanks(false);
+        setManualRankingEnabled(false);
       }
     });
     return () => unsubscribeConfig();
@@ -243,6 +248,18 @@ export default function App() {
   const toggleShowRanks = async () => {
     const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'settings');
     await setDoc(configRef, { showRanks: !showRanks }, { merge: true });
+  };
+
+  const confirmToggleManualRank = async () => {
+    const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'settings');
+    await setDoc(configRef, { manualRankingEnabled: pendingManualRankState }, { merge: true });
+    setShowManualRankConfirmModal(false);
+  };
+
+  const updateManualRank = async (id, val) => {
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'submissions', id);
+    await setDoc(docRef, { manualRank: val }, { merge: true });
+    setAllSubmissions(prev => prev.map(s => s.id === id ? { ...s, manualRank: val } : s));
   };
 
   const fetchAllSubmissions = async () => {
@@ -530,122 +547,143 @@ export default function App() {
 
   if (view === 'login') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-blue-100 flex items-center justify-center p-4 sm:p-6" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
-        <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
-          <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-6 sm:p-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-               <Building2 className="w-24 h-24 sm:w-32 sm:h-32" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-blue-100 flex flex-col items-center justify-between p-4 sm:p-6" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
+        <div className="flex-1 w-full flex items-center justify-center">
+          <div className="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+            <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-6 sm:p-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                 <Building2 className="w-24 h-24 sm:w-32 sm:h-32" />
+              </div>
+              <Award className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-3 sm:mb-4 relative z-10" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 relative z-10">Wafy Wafiyya Entrance</h1>
+              <p className="text-blue-100 font-medium text-sm sm:text-lg relative z-10">Admission Drive - Tracker & Analytics</p>
             </div>
-            <Award className="w-12 h-12 sm:w-16 sm:h-16 text-white mx-auto mb-3 sm:mb-4 relative z-10" />
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 relative z-10">Wafy Wafiyya Entrance</h1>
-            <p className="text-blue-100 font-medium text-sm sm:text-lg relative z-10">Admission Drive - Tracker & Analytics</p>
-          </div>
-          
-          <div className="p-5 sm:p-8">
-            {/* Login Tabs */}
-            <div className="flex flex-col sm:flex-row rounded-xl bg-slate-100 p-1 mb-6 sm:mb-8 gap-1 sm:gap-0">
-              <button 
-                onClick={() => { setLoginTab('college'); setLoginError(''); setPasskeyInput(''); }}
-                className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'college' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                College Login
-              </button>
-              <button 
-                onClick={() => { setLoginTab('admin'); setLoginError(''); setPasskeyInput(''); }}
-                className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'admin' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Admin Login
-              </button>
-            </div>
+            
+            <div className="p-5 sm:p-8">
+              {/* Login Tabs */}
+              <div className="flex flex-col sm:flex-row rounded-xl bg-slate-100 p-1 mb-6 sm:mb-8 gap-1 sm:gap-0">
+                <button 
+                  onClick={() => { setLoginTab('college'); setLoginError(''); setPasskeyInput(''); }}
+                  className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'college' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  College Login
+                </button>
+                <button 
+                  onClick={() => { setLoginTab('admin'); setLoginError(''); setPasskeyInput(''); }}
+                  className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-lg transition-all ${loginTab === 'admin' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Admin Login
+                </button>
+              </div>
 
-            <form onSubmit={handleLogin} className="space-y-5 sm:space-y-6">
-              {loginError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 flex-shrink-0" /> {loginError}
-                </div>
-              )}
-
-              {loginTab === 'college' ? (
-                <>
-                  <div className="relative z-50">
-                    <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">സ്ഥാപനം (Select Institution)</label>
-                    <SearchableSelect 
-                      options={COLLEGES} value={selectedIdInput} onChange={setSelectedIdInput}
-                      placeholder="-- നിങ്ങളുടെ സ്ഥാപനം തിരയുക --"
-                    />
+              <form onSubmit={handleLogin} className="space-y-5 sm:space-y-6">
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0" /> {loginError}
                   </div>
+                )}
+
+                {loginTab === 'college' ? (
+                  <>
+                    <div className="relative z-50">
+                      <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">സ്ഥാപനം (Select Institution)</label>
+                      <SearchableSelect 
+                        options={COLLEGES} value={selectedIdInput} onChange={setSelectedIdInput}
+                        placeholder="-- നിങ്ങളുടെ സ്ഥാപനം തിരയുക --"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">പാസ്കീ (Passkey)</label>
+                      <div className="relative">
+                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input
+                          type="text" required maxLength={5}
+                          className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold tracking-widest uppercase rounded-xl border-2 border-slate-200 focus:border-blue-500 outline-none text-slate-800"
+                          placeholder="5-Digit Key" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value.toUpperCase())}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
                   <div>
-                    <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">പാസ്കീ (Passkey)</label>
+                    <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">അഡ്മിൻ പാസ്‌വേർഡ് (Admin Password)</label>
                     <div className="relative">
                       <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <input
-                        type="text" required maxLength={5}
-                        className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold tracking-widest uppercase rounded-xl border-2 border-slate-200 focus:border-blue-500 outline-none text-slate-800"
-                        placeholder="5-Digit Key" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value.toUpperCase())}
+                        type="password" required
+                        className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-200 focus:border-teal-500 outline-none text-slate-800"
+                        placeholder="Enter Admin Password" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value)}
                       />
                     </div>
                   </div>
-                </>
-              ) : (
-                <div>
-                  <label className="block text-sm sm:text-base font-bold text-slate-700 mb-2">അഡ്മിൻ പാസ്‌വേർഡ് (Admin Password)</label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                    <input
-                      type="password" required
-                      className="w-full pl-12 pr-5 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-200 focus:border-teal-500 outline-none text-slate-800"
-                      placeholder="Enter Admin Password" value={passkeyInput} onChange={(e) => setPasskeyInput(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
+                )}
 
-              <button type="submit" className={`w-full text-white text-base sm:text-lg font-bold py-3.5 sm:py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-2 sm:gap-3 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
-                <LogIn className="w-5 h-5 sm:w-6 sm:h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
-              </button>
-            </form>
+                <button type="submit" className={`w-full text-white text-base sm:text-lg font-bold py-3.5 sm:py-4 px-4 rounded-xl transition-all flex justify-center items-center gap-2 sm:gap-3 shadow-lg ${loginTab === 'college' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-200'}`}>
+                  <LogIn className="w-5 h-5 sm:w-6 sm:h-6" /> {loginTab === 'college' ? 'കോളേജ് ലോഗിൻ' : 'അഡ്മിൻ ലോഗിൻ'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
+        <AppFooter />
       </div>
     );
   }
 
   if (view === 'admin') {
     const totalColleges = COLLEGES.length;
-    const submittedCount = allSubmissions.length;
+    
+    // Dynamic sorting based on Manual Ranking or Auto Score
+    const sortedSubmissions = [...allSubmissions].sort((a, b) => {
+      if (manualRankingEnabled) {
+        const rankA = parseInt(a.manualRank) || 9999;
+        const rankB = parseInt(b.manualRank) || 9999;
+        if (rankA === rankB) return b.score - a.score;
+        return rankA - rankB;
+      } else {
+        return b.score - a.score;
+      }
+    });
+
+    const displaySubmissions = sortedSubmissions.map((sub, index) => ({
+      ...sub,
+      displayRank: manualRankingEnabled ? (sub.manualRank || '-') : (index + 1)
+    }));
+
+    const submittedCount = displaySubmissions.length;
     
     // Aggregated Metrics
-    const totalStudents = allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q6_data_collected) || 0), 0);
-    const totalReferrals = allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q15_referral_count) || 0), 0);
-    const totalHouses = allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q7_houses_covered) || 0), 0);
-    const totalCallTeamReady = allSubmissions.filter(c => c.q16_call_team_ready === 'Yes').length;
-    const totalCallTeamMembers = allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q16_call_team_count) || 0), 0);
-    const videoBrochureAdopted = allSubmissions.filter(c => c.q17_video_brochure === 'Yes').length;
-    const totalMeetingsConducted = allSubmissions.reduce((acc, curr) => acc + (curr.q5_meetings?.filter(m => m.date).length || 0), 0);
+    const totalStudents = displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q6_data_collected) || 0), 0);
+    const totalReferrals = displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q15_referral_count) || 0), 0);
+    const totalHouses = displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q7_houses_covered) || 0), 0);
+    const totalCallTeamReady = displaySubmissions.filter(c => c.q16_call_team_ready === 'Yes').length;
+    const totalCallTeamMembers = displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q16_call_team_count) || 0), 0);
+    const videoBrochureAdopted = displaySubmissions.filter(c => c.q17_video_brochure === 'Yes').length;
+    const totalMeetingsConducted = displaySubmissions.reduce((acc, curr) => acc + (curr.q5_meetings?.filter(m => m.date).length || 0), 0);
 
-    const avgOrbit = submittedCount ? Math.round(allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q8_orbit_participation) || 0), 0) / submittedCount) : 0;
-    const avgMgt = submittedCount ? (allSubmissions.reduce((acc, curr) => acc + (parseInt(curr.q10_management_rating) || 0), 0) / submittedCount).toFixed(1) : 0;
+    const avgOrbit = submittedCount ? Math.round(displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q8_orbit_participation) || 0), 0) / submittedCount) : 0;
+    const avgMgt = submittedCount ? (displaySubmissions.reduce((acc, curr) => acc + (parseInt(curr.q10_management_rating) || 0), 0) / submittedCount).toFixed(1) : 0;
 
     // Percentages
-    const percCommittee = submittedCount ? Math.round((allSubmissions.filter(d => d.q1_committee_formed === 'Yes').length / submittedCount) * 100) : 0;
-    const percHelpDesk = submittedCount ? Math.round((allSubmissions.filter(d => d.q4_help_desk_formed === 'Yes').length / submittedCount) * 100) : 0;
-    const percDoorToDoor = submittedCount ? Math.round((allSubmissions.filter(d => d.q7_door_to_door === 'Yes').length / submittedCount) * 100) : 0;
-    const percSocial = submittedCount ? Math.round((allSubmissions.filter(d => d.q3_instagram || d.q3_facebook || d.q3_has_youtube || d.q3_has_twitter).length / submittedCount) * 100) : 0;
+    const percCommittee = submittedCount ? Math.round((displaySubmissions.filter(d => d.q1_committee_formed === 'Yes').length / submittedCount) * 100) : 0;
+    const percHelpDesk = submittedCount ? Math.round((displaySubmissions.filter(d => d.q4_help_desk_formed === 'Yes').length / submittedCount) * 100) : 0;
+    const percDoorToDoor = submittedCount ? Math.round((displaySubmissions.filter(d => d.q7_door_to_door === 'Yes').length / submittedCount) * 100) : 0;
+    const percSocial = submittedCount ? Math.round((displaySubmissions.filter(d => d.q3_instagram || d.q3_facebook || d.q3_has_youtube || d.q3_has_twitter).length / submittedCount) * 100) : 0;
 
-    const top5 = allSubmissions.slice(0, 5);
-    const bottom5 = [...allSubmissions].reverse().slice(0, 5).filter(d => d.score > 0);
+    const top5 = displaySubmissions.slice(0, 5);
+    const bottom5 = [...displaySubmissions].reverse().slice(0, 5).filter(d => d.score > 0);
 
     // Extracting Suggestions & Plans
-    const allPlans = allSubmissions.flatMap(c => 
+    const allPlans = displaySubmissions.flatMap(c => 
        (c.q19_future_plans || []).map(plan => ({ college: c.institutionName, text: plan }))
     ).filter(p => p.text && p.text.trim() !== '');
 
-    const allSuggestions = allSubmissions.map(c => 
+    const allSuggestions = displaySubmissions.map(c => 
        ({ college: c.institutionName, text: c.q18_expected_support })
     ).filter(s => s.text && s.text.trim() !== '');
 
     return (
-      <div className="min-h-screen bg-slate-50 pb-24 overflow-x-auto" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
+      <div className="min-h-screen bg-slate-50 overflow-x-auto flex flex-col justify-between" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
         {/* CSS for Printing PDF - Highly Professional Minimal Design */}
         <style>{`
           @media print {
@@ -681,6 +719,8 @@ export default function App() {
             td { border-bottom: 1px solid #cbd5e1 !important; padding: 10px 4px !important; font-size: 9pt !important; border-left: none !important; border-right: none !important;}
             thead { display: table-header-group !important; }
             tr { page-break-inside: avoid !important; }
+            input[type="number"] { border: none !important; box-shadow: none !important; padding: 0 !important; text-align: left !important; -moz-appearance: textfield; font-weight: bold !important; color: #334155 !important; }
+            input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
           }
           @media screen {
             .print-only { display: none !important; }
@@ -688,7 +728,7 @@ export default function App() {
         `}</style>
 
         {/* ADMIN DASHBOARD ALWAYS IN COMPUTER MODE MIN-WIDTH 1200px */}
-        <div className="min-w-[1200px]">
+        <div className="min-w-[1200px] pb-12">
           <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md no-print">
             <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3">
@@ -704,6 +744,16 @@ export default function App() {
                 >
                   {showRanks ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                   {showRanks ? 'Ranks Visible' : 'Ranks Hidden'}
+                </button>
+
+                {/* TOGGLE MANUAL RANK BUTTON */}
+                <button 
+                  onClick={() => { setPendingManualRankState(!manualRankingEnabled); setShowManualRankConfirmModal(true); }} 
+                  title="Toggle Manual Ranking Mode"
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors ${manualRankingEnabled ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600'}`}
+                >
+                  <Target className="w-4 h-4" />
+                  {manualRankingEnabled ? 'Manual Rank: ON' : 'Manual Rank: OFF'}
                 </button>
 
                 {/* SHOW RANK LOGIC BUTTON */}
@@ -760,6 +810,26 @@ export default function App() {
             </div>
           )}
 
+          {/* Manual Rank Verification Modal */}
+          {showManualRankConfirmModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
+               <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+                   <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                      <h3 className="text-xl font-bold text-slate-900">Verify Action</h3>
+                      <button onClick={() => setShowManualRankConfirmModal(false)} className="p-1 hover:bg-slate-100 rounded-full"><X className="w-6 h-6 text-slate-500" /></button>
+                   </div>
+                   <p className="text-slate-700 mb-6 leading-relaxed">
+                     Are you sure you want to <strong className={pendingManualRankState ? "text-amber-600" : "text-slate-800"}>{pendingManualRankState ? 'Enable' : 'Disable'}</strong> Manual Ranking?
+                     {pendingManualRankState ? " Auto-calculated ranks will be hidden and you can set custom ranks for each college." : " The system will revert to auto-calculated scores and rankings."}
+                   </p>
+                   <div className="flex justify-end gap-3">
+                     <button onClick={() => setShowManualRankConfirmModal(false)} className="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100">Cancel</button>
+                     <button onClick={confirmToggleManualRank} className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700">Confirm</button>
+                   </div>
+               </div>
+            </div>
+          )}
+
           {/* Rank Logic Modal */}
           {showLogicModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 no-print">
@@ -773,7 +843,7 @@ export default function App() {
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                           <h4 className="font-bold text-slate-900 mb-2">High Impact Metrics</h4>
                           <ul className="space-y-2">
-                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Referrals (Admissions)</span> <span className="font-bold text-indigo-600">50 pts/student</span></li>
+                            <li className="flex justify-between border-b border-slate-200 pb-1"><span>Referrals (Admissions)</span> <span className="font-bold text-indigo-600">25 pts/student</span></li>
                           </ul>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -817,7 +887,7 @@ export default function App() {
                    <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
                       <div>
                         <h3 className="text-lg font-bold text-slate-900 leading-tight pr-4">{selectedScoreDetails.institutionName}</h3>
-                        <p className="text-sm font-semibold text-indigo-600 mt-1">Rank #{selectedScoreDetails.rank} &bull; Total Score: {selectedScoreDetails.score}</p>
+                        <p className="text-sm font-semibold text-indigo-600 mt-1">Rank #{selectedScoreDetails.displayRank || selectedScoreDetails.rank} &bull; Total Score: {selectedScoreDetails.score}</p>
                       </div>
                       <button onClick={() => setSelectedScoreDetails(null)} className="p-1 hover:bg-slate-100 rounded-full flex-shrink-0"><X className="w-5 h-5 text-slate-500" /></button>
                    </div>
@@ -880,8 +950,8 @@ export default function App() {
                       <TrendingUp className="w-6 h-6 text-indigo-600 no-print" />
                       <h2 className="font-bold text-slate-800 text-lg">Performance Distribution Curve</h2>
                    </div>
-                   {allSubmissions.length > 0 ? (
-                      <PerformanceGraph data={allSubmissions} />
+                   {displaySubmissions.length > 0 ? (
+                      <PerformanceGraph data={displaySubmissions} />
                    ) : (
                       <p className="text-center text-slate-500 py-10">No data available for graph.</p>
                    )}
@@ -1018,9 +1088,21 @@ export default function App() {
                             </tr>
                          </thead>
                          <tbody className="text-sm">
-                            {allSubmissions.map((c) => (
+                            {displaySubmissions.map((c) => (
                                <tr key={c.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                  <td className="py-3 px-2 font-bold text-slate-700">#{c.rank}</td>
+                                  <td className="py-3 px-2 font-bold text-slate-700">
+                                    {manualRankingEnabled ? (
+                                      <input 
+                                        type="number" 
+                                        className="w-16 p-1 border border-slate-300 rounded text-center focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        defaultValue={c.manualRank || ''}
+                                        onBlur={(e) => updateManualRank(c.id, e.target.value)}
+                                        placeholder="-"
+                                      />
+                                    ) : (
+                                      `#${c.displayRank}`
+                                    )}
+                                  </td>
                                   <td className="py-3 px-2 font-bold text-slate-800 max-w-[250px] truncate" title={c.institutionName}>{c.institutionName}</td>
                                   <td className="py-3 px-2 font-bold text-indigo-600 text-right">{c.score}</td>
                                   <td className="py-3 px-2 font-medium text-slate-600 text-right">{c.q15_referral_count || 0}</td>
@@ -1048,21 +1130,40 @@ export default function App() {
             )}
           </main>
         </div>
+        <AppFooter />
       </div>
     );
   }
 
   // --- College Form View ---
   let myRank = null;
-  let totalRanked = allSubmissions.length;
-  if (allSubmissions.length > 0 && activeCollege) {
-      const found = allSubmissions.find(d => d.id === activeCollege.id);
-      if (found) myRank = found.rank;
+  
+  // Compute sorted submissions here too for College View
+  const sortedSubmissions = [...allSubmissions].sort((a, b) => {
+    if (manualRankingEnabled) {
+      const rankA = parseInt(a.manualRank) || 9999;
+      const rankB = parseInt(b.manualRank) || 9999;
+      if (rankA === rankB) return b.score - a.score;
+      return rankA - rankB;
+    } else {
+      return b.score - a.score;
+    }
+  });
+
+  const displaySubmissions = sortedSubmissions.map((sub, index) => ({
+    ...sub,
+    displayRank: manualRankingEnabled ? (sub.manualRank || '-') : (index + 1)
+  }));
+
+  let totalRanked = displaySubmissions.length;
+  if (displaySubmissions.length > 0 && activeCollege) {
+      const found = displaySubmissions.find(d => d.id === activeCollege.id);
+      if (found) myRank = found.displayRank;
   }
-  const isRankLow = myRank && totalRanked > 3 && (myRank > totalRanked * 0.6);
+  const isRankLow = myRank !== '-' && myRank && totalRanked > 3 && (parseInt(myRank) > totalRanked * 0.6);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between" style={{ fontFamily: "'Inter', 'Anek Malayalam', sans-serif" }}>
       <style>{`
         .custom-slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; outline: none; }
         .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #7c3aed; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 2px solid white; }
@@ -1091,7 +1192,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <main className="max-w-4xl w-full mx-auto px-3 sm:px-4 py-6 sm:py-8 flex-1 pb-24">
         
         {/* Dynamic Performance Banner - Controlled by Admin showRanks toggle */}
         {(!isLoadingData && myRank && showRanks) && (
@@ -1563,11 +1664,26 @@ export default function App() {
           </form>
         )}
       </main>
+      <AppFooter />
     </div>
   );
 }
 
 // --- Reusable Components ---
+
+function AppFooter() {
+  const waText = encodeURIComponent("I saw your entrance track application. I need to design an app.");
+  return (
+    <div className="w-full text-center py-6 mt-auto no-print">
+      <p className="text-sm font-medium text-slate-500">
+        &copy; {new Date().getFullYear()} Wafy Alumni Association. 
+        <span className="block sm:inline sm:ml-1">
+          Designed by <a href={`https://wa.me/917559865389?text=${waText}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:text-indigo-800 hover:underline font-bold transition-colors">Dot Projects</a>
+        </span>
+      </p>
+    </div>
+  );
+}
 
 function PerformanceGraph({ data }) {
   if(!data || data.length === 0) return null;
